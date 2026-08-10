@@ -337,6 +337,10 @@ input,button{font-family:var(--font)}
                   <option value="review">🔁 복습 신청 영상</option>
                 </select>
               </div>
+              <div>
+                <label class="flabel">학년</label>
+                <select id="v-school" class="form-select" style="width:150px"><option value="">🌐 전체 공개</option></select>
+              </div>
               <div style="display:flex;align-items:flex-end"><button class="btn blue" onclick="addVideo()" style="height:40px;white-space:nowrap">등록</button></div>
             </div>
           </div>
@@ -363,13 +367,13 @@ input,button{font-family:var(--font)}
               <div><label class="flabel">이름</label><input id="s-name" class="form-input" style="width:120px" placeholder="학생 이름"/></div>
               <div><label class="flabel">아이디</label><input id="s-id" class="form-input" style="width:120px" placeholder="로그인 아이디"/></div>
               <div><label class="flabel">비밀번호</label><input id="s-pw" class="form-input" type="password" style="width:110px" placeholder="비밀번호"/></div>
-              <div><label class="flabel">학교</label><select id="s-school" class="form-input" style="width:110px"><option value="">미배정</option></select></div>
+              <div><label class="flabel">학년</label><select id="s-school" class="form-input" style="width:130px"><option value="">미배정</option></select></div>
               <div style="display:flex;align-items:flex-end"><button class="btn blue" onclick="addStudent()" style="height:40px">등록</button></div>
             </div>
           </div>
         </div>
         <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-head"><h3>학교 일괄 지정</h3></div>
+          <div class="card-head"><h3>학년 일괄 지정</h3></div>
           <div class="card-body">
             <div style="font-size:12px;color:var(--text2);margin-bottom:8px">명단을 붙여넣으면 이름으로 찾아서 한 번에 학교를 지정해요. (한 줄에 이름 하나, 뒤에 다른 내용이 있어도 첫 단어만 이름으로 인식해요)</div>
             <textarea id="bulk-school-names" class="form-input" rows="6" style="width:100%;font-family:var(--mono);font-size:12px" placeholder="김도양	치동고1(토 6:00)-임인숙T&#10;김보은	치동고1(토 6:00)-임인숙T"></textarea>
@@ -1856,12 +1860,14 @@ async function addVideo(){
   const url=document.getElementById('v-url').value.trim();
   const desc=document.getElementById('v-desc').value.trim();
   const category=document.getElementById('v-category').value;
+  const schoolEl2=document.getElementById('v-school');
+  const school_id=(schoolEl2&&schoolEl2.value)||null;
   if(!title||!url){notify('제목과 URL을 입력하세요.','error');return;}
   if(!ytId(url)){notify('유효한 유튜브 URL을 입력하세요.','error');return;}
   const id='v'+Date.now();
-  const{error}=await sb.from('videos').insert({id,title,url,description:desc,category});
+  const{error}=await sb.from('videos').insert({id,title,url,description:desc,category,school_id});
   if(error){notify('등록 실패: '+error.message,'error');return;}
-  db.videos.push({id,title,url,description:desc,category,created_at:new Date().toISOString()});
+  db.videos.push({id,title,url,description:desc,category,school_id,created_at:new Date().toISOString()});
   ['v-title','v-url','v-desc'].forEach(i=>document.getElementById(i).value='');
   notify(`강의가 등록되었습니다. (${category==='review'?'복습 신청 영상':'일반 강의'})`, 'success');
   renderVideos();
@@ -1886,20 +1892,23 @@ function renderVideoGrid(videos, containerId){
   if(!videos.length){el.innerHTML='<div style="padding:1rem;color:var(--text2);font-size:13px;text-align:center">등록된 강의가 없습니다.</div>';return;}
   el.innerHTML=`<div class="video-grid">`+videos.map(v=>{
     const t=thumb(v.url);
-    const progs=sts.map(s=>getPct(s.id,v.id));
-    const avgP=sts.length?Math.round(progs.reduce((a,b)=>a+b,0)/sts.length):0;
+    const vsts=v.school_id?sts.filter(function(s){return s.school_id===v.school_id;}):sts;
+    const progs=vsts.map(s=>getPct(s.id,v.id));
+    const avgP=vsts.length?Math.round(progs.reduce((a,b)=>a+b,0)/vsts.length):0;
     const doneC=progs.filter(p=>p>=100).length;
     const isReview=v.category==='review';
+    const clsName=v.school_id?(((qaDb.schools||[]).find(function(s){return s.id===v.school_id;})||{}).name||''):'';
     return`<div class="video-card ${isReview?'review-card':''}">
       <div class="video-thumb">${t?`<img src="${t}" onerror="this.style.display='none'">`:''}<div class="thumb-fb"><div class="yt-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>
       <div style="padding:12px 14px">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
           <span class="badge ${isReview?'review':'normal'}">${isReview?'🔁 복습':'📚 일반'}</span>
+          <span class="badge" style="background:var(--amber-bg);color:var(--amber)">${clsName?'🏫 '+clsName:'🌐 전체'}</span>
         </div>
         <div style="font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.title}</div>
         <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${v.description||'설명 없음'}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-          <span style="font-size:11px;color:var(--text2)">${isReview?`권한 ${db.access.filter(a=>a.video_id===v.id).length}명`:doneC+'/'+sts.length+'명 완료'}</span>
+          <span style="font-size:11px;color:var(--text2)">${isReview?`권한 ${db.access.filter(a=>a.video_id===v.id).length}명`:doneC+'/'+vsts.length+'명 완료'}</span>
           <strong style="font-size:12px;color:${pctColor(avgP)}">${avgP}%</strong>
         </div>
         <div class="pbar"><div class="pbar-fill" style="width:${avgP}%;background:${pctColor(avgP)}"></div></div>
@@ -1912,6 +1921,7 @@ function renderVideoGrid(videos, containerId){
 }
 
 function renderVideos(){
+  populateSchoolSelects();
   renderVideoGrid(normalVideos(),'video-list-normal');
   renderVideoGrid(reviewVideos(),'video-list-review');
 }
@@ -1938,11 +1948,13 @@ function populateSchoolSelects(){
   if(s1)s1.innerHTML='<option value="">미배정</option>'+opts;
   const s2=document.getElementById('bulk-school-select');
   if(s2)s2.innerHTML=opts;
+  const s3=document.getElementById('v-school');
+  if(s3)s3.innerHTML='<option value="">🌐 전체 공개</option>'+opts;
 }
 async function bulkAssignSchool(){
   const schoolId=document.getElementById('bulk-school-select').value;
   const school=(qaDb.schools||[]).find(function(s){return s.id===schoolId;});
-  if(!school){notify('학교를 선택하세요.','error');return;}
+  if(!school){notify('학년을 선택하세요.','error');return;}
   const raw=document.getElementById('bulk-school-names').value;
   const names=raw.split('\n').map(function(line){return line.trim().split(/\s|\t/)[0];}).filter(function(n){return n;});
   if(!names.length){notify('명단을 입력하세요.','error');return;}
@@ -2034,7 +2046,7 @@ function renderStudents(){
   const tbl=document.getElementById('student-tbl');
   if(!sts.length){tbl.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text2)">등록된 학생이 없습니다.</td></tr>';return;}
   const schoolOptsHtml='<option value="">미배정</option>'+(qaDb.schools||[]).map(function(sc){return '<option value="'+sc.id+'">'+sc.name+'</option>';}).join('');
-  tbl.innerHTML=`<thead><tr><th>이름</th><th>아이디</th><th>학교</th><th>평균 진도</th><th>완료 강의</th><th></th></tr></thead><tbody>`+
+  tbl.innerHTML=`<thead><tr><th>이름</th><th>아이디</th><th>학년</th><th>평균 진도</th><th>완료 강의</th><th></th></tr></thead><tbody>`+
     sts.map(s=>{
       const vids=normalVideos();
       const progs=vids.map(v=>getPct(s.id,v.id));
@@ -2349,7 +2361,8 @@ function sNav(panel){
 /* ===== 학생: 일반 강의 ===== */
 function renderLectures(){
   const el=document.getElementById('student-lectures');
-  const vids=normalVideos();
+  const myClass=(session&&session.school_id)||null;
+  const vids=normalVideos().filter(function(v){return !v.school_id || v.school_id===myClass;});
   if(!vids.length){el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg><p>강사가 등록한 강의가 없습니다.</p></div>';return;}
   el.innerHTML=vids.map(v=>{
     const p=getPct(session.id,v.id),ws=getWatchSec(session.id,v.id),lp=getLastPos(session.id,v.id);
@@ -3160,7 +3173,7 @@ function openCertItemModal(){
   if(!students.length){
     el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">이 학교로 지정된 학생이 없어요. 학생 관리 탭에서 먼저 학교를 지정해주세요.</div>';
   } else {
-    el.innerHTML=(unassignedCount?'<div style="font-size:11px;color:var(--text3);padding:0 6px 6px">다른 학교/미배정 학생 '+unassignedCount+'명은 표시되지 않았어요.</div>':'')+students.map(function(s){
+    el.innerHTML=(unassignedCount?'<div style="font-size:11px;color:var(--text3);padding:0 6px 6px">다른 학년/미배정 학생 '+unassignedCount+'명은 표시되지 않았어요.</div>':'')+students.map(function(s){
       return '<label style="display:flex;align-items:center;gap:10px;padding:8px 6px;font-size:13px;cursor:pointer;border-radius:6px;transition:background .1s" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'">'+
         '<input type="checkbox" value="'+s.id+'" style="width:18px;height:18px;cursor:pointer;flex-shrink:0"> '+
         '<span style="font-weight:500">'+s.name+'</span>'+
@@ -3709,7 +3722,7 @@ async function loadQaData(){
   updateAllBadges();
     qaDb.materials=m.data||[];
     if(!qaDb.schools.length){
-      var defaults=[{id:'sc_hanbaek',name:'한백고'},{id:'sc_chidong',name:'치동고'}];
+      var defaults=[{id:'cls_go3',name:'고3'},{id:'cls_go2',name:'고2'},{id:'cls_go1',name:'고1'},{id:'cls_yebi',name:'중3(예비고1)'}];
       for(var i=0;i<defaults.length;i++){
         var item=Object.assign({},defaults[i],{created_at:new Date().toISOString()});
         qaDb.schools.push(item);
