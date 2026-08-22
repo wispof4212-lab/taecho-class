@@ -322,7 +322,7 @@ input,button{font-family:var(--font)}
 
       <!-- 강의 관리 -->
       <div class="panel" id="panel-videos">
-        <div class="page-header"><h1>강의 관리</h1><p>일반 강의와 복습 신청 영상을 등록하고 관리하세요</p></div>
+        <div class="page-header"><h1>강의 관리</h1><p>일반 강의(학년별)와 전체 강의를 등록하고 관리하세요</p></div>
         <div class="card" style="margin-bottom:1.5rem">
           <div class="card-head"><h3>새 강의 등록</h3></div>
           <div class="card-body">
@@ -331,26 +331,34 @@ input,button{font-family:var(--font)}
             <div class="frow">
               <div style="flex:1"><label class="flabel">강의 설명 (선택)</label><input id="v-desc" class="form-input" placeholder="이 강의에서 배우는 내용"/></div>
               <div>
-                <label class="flabel">카테고리</label>
-                <select id="v-category" class="form-select" style="width:140px">
+                <label class="flabel">분류</label>
+                <select id="v-category" class="form-select" style="width:130px" onchange="onVCategoryChange()">
                   <option value="normal">📚 일반 강의</option>
-                  <option value="review">🔁 복습 신청 영상</option>
+                  <option value="all">🌐 전체 강의</option>
                 </select>
               </div>
-              <div>
+              <div id="v-school-wrap">
                 <label class="flabel">학년</label>
-                <select id="v-school" class="form-select" style="width:150px"><option value="">🌐 전체 공개</option></select>
+                <select id="v-school" class="form-select" style="width:150px"></select>
+              </div>
+              <div id="v-subtype-wrap" style="display:none">
+                <label class="flabel">유형</label>
+                <select id="v-subtype" class="form-select" style="width:150px">
+                  <option value="mock">📝 모의고사 기출</option>
+                  <option value="grammar">📖 문법 개념</option>
+                  <option value="classic">📜 고전시가</option>
+                </select>
               </div>
               <div style="display:flex;align-items:flex-end"><button class="btn blue" onclick="addVideo()" style="height:40px;white-space:nowrap">등록</button></div>
             </div>
           </div>
         </div>
-        <!-- 일반 강의 목록 -->
-        <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>📚</span> 일반 강의</div><div class="section-divider-line"></div></div>
+        <!-- 일반 강의(학년별) 목록 -->
+        <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>📚</span> 일반 강의 (학년별)</div><div class="section-divider-line"></div></div>
         <div id="video-list-normal"></div>
-        <!-- 복습 신청 영상 목록 -->
-        <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🔁</span> 복습 신청 영상</div><div class="section-divider-line"></div></div>
-        <div id="video-list-review"></div>
+        <!-- 전체 강의 목록 -->
+        <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🌐</span> 전체 강의 (모의고사·문법·고전시가)</div><div class="section-divider-line"></div></div>
+        <div id="video-list-all"></div>
       </div>
 
       <!-- 학생 관리 -->
@@ -368,6 +376,7 @@ input,button{font-family:var(--font)}
               <div><label class="flabel">아이디</label><input id="s-id" class="form-input" style="width:120px" placeholder="로그인 아이디"/></div>
               <div><label class="flabel">비밀번호</label><input id="s-pw" class="form-input" type="password" style="width:110px" placeholder="비밀번호"/></div>
               <div><label class="flabel">학년</label><select id="s-school" class="form-input" style="width:130px"><option value="">미배정</option></select></div>
+              <div><label class="flabel">학교</label><input id="s-schoolname" class="form-input" style="width:130px" placeholder="동덕여고 등" list="school-datalist"/><datalist id="school-datalist"><option value="동덕여고"></option><option value="서울고"></option></datalist></div>
               <div style="display:flex;align-items:flex-end"><button class="btn blue" onclick="addStudent()" style="height:40px">등록</button></div>
             </div>
           </div>
@@ -873,20 +882,9 @@ input,button{font-family:var(--font)}
         <div class="card"><div class="card-head"><h3>강의별 진도</h3></div><div id="mypage-list" style="padding:4px 0"></div></div>
       </div>
       <div class="panel" id="panel-qa">
-        <div class="page-header"><h1>Q&A</h1><p>과제 질문 또는 자유롭게 질문하세요</p></div>
-        <!-- 카테고리 탭 -->
-        <div style="display:flex;gap:8px;margin-bottom:1rem">
-          <button id="qa-cat-homework" class="btn btn-sm" onclick="sQaSetCat('homework')"
-            style="flex:1;background:rgba(245,168,0,0.1);color:var(--accent);border:1px solid rgba(245,168,0,0.3)">
-            📚 과제 질문
-          </button>
-          <button id="qa-cat-free" class="btn btn-sm" onclick="sQaSetCat('free')"
-            style="flex:1;background:var(--card);color:var(--text2);border:1px solid var(--border)">
-            💬 자유 질문
-          </button>
-        </div>
-        <!-- 과제 질문 뷰 -->
-        <div id="s-qa-homework-view">
+        <div class="page-header"><h1>Q&A</h1><p>궁금한 점을 자유롭게 질문하세요</p></div>
+        <!-- 과제 질문 뷰 (사용 안 함 · 숨김) -->
+        <div id="s-qa-homework-view" style="display:none">
           <div id="s-qa-breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-bottom:14px;flex-wrap:wrap"></div>
           <div id="s-qa-school-view">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="s-qa-school-list"></div>
@@ -909,7 +907,7 @@ input,button{font-family:var(--font)}
           </div>
         </div>
         <!-- 자유 질문 뷰 -->
-        <div id="s-qa-free-view" style="display:none">
+        <div id="s-qa-free-view">
           <div class="card" style="margin-bottom:1rem">
             <div class="card-head"><h3>💬 자유 질문</h3></div>
             <div style="padding:0 1.25rem 1.25rem">
@@ -1544,10 +1542,19 @@ function pctColor(p){return p>=100?'var(--green)':p>=50?'var(--amber)':'var(--re
 function pctClass(p){return p>=100?'green':p>=50?'amber':'muted';}
 function pctBadge(p){return p>=100?'done':p>0?'partial':'none';}
 function pctLabel(p){return p>=100?'완료':p>0?p+'% 시청':'미시청';}
-function activeStudents(){return db.users.filter(u=>u.role==='student'&&u.status==='active').sort((a,b)=>a.name.localeCompare(b.name,'ko'));}
+function activeStudents(){return db.users.filter(u=>u.role==='student'&&u.status==='active').sort(function(a,b){var ai=(a.student_status==='휴학'||a.student_status==='졸업')?1:0;var bi=(b.student_status==='휴학'||b.student_status==='졸업')?1:0;if(ai!==bi)return ai-bi;return a.name.localeCompare(b.name,'ko');});}
 function pendingStudents(){return db.users.filter(u=>u.role==='student'&&u.status==='pending').sort((a,b)=>a.name.localeCompare(b.name,'ko'));}
-function normalVideos(){return db.videos.filter(v=>v.category!=='review');}
+function normalVideos(){return db.videos.filter(v=>(v.category||'normal')==='normal');}
+function allVideos(){return db.videos.filter(v=>v.category==='all');}
 function reviewVideos(){return db.videos.filter(v=>v.category==='review');}
+var SUBTYPE_LABELS={mock:'📝 모의고사 기출',grammar:'📖 문법 개념',classic:'📜 고전시가'};
+function onVCategoryChange(){
+  var cat=(document.getElementById('v-category')||{}).value;
+  var sw=document.getElementById('v-school-wrap');
+  var tw=document.getElementById('v-subtype-wrap');
+  if(sw)sw.style.display=(cat==='all')?'none':'';
+  if(tw)tw.style.display=(cat==='all')?'':'none';
+}
 function fmtTime(sec){if(!sec||isNaN(sec)||sec<=0)return '0초';const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);if(h>0)return`${h}시간 ${m}분 ${s}초`;if(m>0)return`${m}분 ${s}초`;return`${s}초`;}
 function notify(msg,type='info'){const n=document.getElementById('notif');n.textContent=msg;n.className=`notif show ${type}`;setTimeout(()=>n.classList.remove('show'),3000);}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
@@ -1860,16 +1867,22 @@ async function addVideo(){
   const url=document.getElementById('v-url').value.trim();
   const desc=document.getElementById('v-desc').value.trim();
   const category=document.getElementById('v-category').value;
-  const schoolEl2=document.getElementById('v-school');
-  const school_id=(schoolEl2&&schoolEl2.value)||null;
+  // 일반 강의 → 학년(school_id), 전체 강의 → 유형(subtype)
+  let school_id=null, subtype=null;
+  if(category==='all'){
+    subtype=(document.getElementById('v-subtype')||{}).value||null;
+  }else{
+    const schoolEl2=document.getElementById('v-school');
+    school_id=(schoolEl2&&schoolEl2.value)||null;
+  }
   if(!title||!url){notify('제목과 URL을 입력하세요.','error');return;}
   if(!ytId(url)){notify('유효한 유튜브 URL을 입력하세요.','error');return;}
   const id='v'+Date.now();
-  const{error}=await sb.from('videos').insert({id,title,url,description:desc,category,school_id});
+  const{error}=await sb.from('videos').insert({id,title,url,description:desc,category,school_id,subtype});
   if(error){notify('등록 실패: '+error.message,'error');return;}
-  db.videos.push({id,title,url,description:desc,category,school_id,created_at:new Date().toISOString()});
+  db.videos.push({id,title,url,description:desc,category,school_id,subtype,created_at:new Date().toISOString()});
   ['v-title','v-url','v-desc'].forEach(i=>document.getElementById(i).value='');
-  notify(`강의가 등록되었습니다. (${category==='review'?'복습 신청 영상':'일반 강의'})`, 'success');
+  notify(`강의가 등록되었습니다. (${category==='all'?'전체 강의':'일반 강의'})`, 'success');
   renderVideos();
 }
 
@@ -1896,19 +1909,19 @@ function renderVideoGrid(videos, containerId){
     const progs=vsts.map(s=>getPct(s.id,v.id));
     const avgP=vsts.length?Math.round(progs.reduce((a,b)=>a+b,0)/vsts.length):0;
     const doneC=progs.filter(p=>p>=100).length;
-    const isReview=v.category==='review';
+    const isAll=v.category==='all';
     const clsName=v.school_id?(((qaDb.schools||[]).find(function(s){return s.id===v.school_id;})||{}).name||''):'';
-    return`<div class="video-card ${isReview?'review-card':''}">
+    const subLabel=SUBTYPE_LABELS[v.subtype]||'🌐 전체 강의';
+    return`<div class="video-card">
       <div class="video-thumb">${t?`<img src="${t}" onerror="this.style.display='none'">`:''}<div class="thumb-fb"><div class="yt-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>
       <div style="padding:12px 14px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-          <span class="badge ${isReview?'review':'normal'}">${isReview?'🔁 복습':'📚 일반'}</span>
-          <span class="badge" style="background:var(--amber-bg);color:var(--amber)">${clsName?'🏫 '+clsName:'🌐 전체'}</span>
+          ${isAll?`<span class="badge" style="background:var(--teal-bg);color:var(--teal)">${subLabel}</span>`:`<span class="badge normal">📚 일반</span><span class="badge" style="background:var(--amber-bg);color:var(--amber)">${clsName?'🏫 '+clsName:'🌐 전체공개'}</span>`}
         </div>
         <div style="font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.title}</div>
         <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${v.description||'설명 없음'}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-          <span style="font-size:11px;color:var(--text2)">${isReview?`권한 ${db.access.filter(a=>a.video_id===v.id).length}명`:doneC+'/'+vsts.length+'명 완료'}</span>
+          <span style="font-size:11px;color:var(--text2)">${doneC+'/'+vsts.length+'명 완료'}</span>
           <strong style="font-size:12px;color:${pctColor(avgP)}">${avgP}%</strong>
         </div>
         <div class="pbar"><div class="pbar-fill" style="width:${avgP}%;background:${pctColor(avgP)}"></div></div>
@@ -1922,8 +1935,9 @@ function renderVideoGrid(videos, containerId){
 
 function renderVideos(){
   populateSchoolSelects();
+  onVCategoryChange();
   renderVideoGrid(normalVideos(),'video-list-normal');
-  renderVideoGrid(reviewVideos(),'video-list-review');
+  renderVideoGrid(allVideos(),'video-list-all');
 }
 
 /* ===== STUDENTS ===== */
@@ -1933,13 +1947,16 @@ async function addStudent(){
   const pw=document.getElementById('s-pw').value;
   const schoolEl=document.getElementById('s-school');
   const school_id=(schoolEl&&schoolEl.value)||null;
+  const snEl=document.getElementById('s-schoolname');
+  const school_name=(snEl&&snEl.value.trim())||null;
   if(!name||!id||!pw){notify('모든 항목을 입력하세요.','error');return;}
   if(db.users.find(u=>u.id===id)){notify('이미 존재하는 아이디입니다.','error');return;}
-  const{error}=await sb.from('users').insert({id,name,pw,role:'student',status:'active',school_id});
+  const{error}=await sb.from('users').insert({id,name,pw,role:'student',status:'active',school_id,school_name});
   if(error){notify('등록 실패: '+error.message,'error');return;}
-  db.users.push({id,name,pw,role:'student',status:'active',school_id});
+  db.users.push({id,name,pw,role:'student',status:'active',school_id,school_name});
   ['s-name','s-id','s-pw'].forEach(i=>document.getElementById(i).value='');
   if(schoolEl)schoolEl.value='';
+  if(snEl)snEl.value='';
   notify(`${name} 학생이 등록되었습니다.`,'success');renderStudents();
 }
 function populateSchoolSelects(){
@@ -1949,7 +1966,7 @@ function populateSchoolSelects(){
   const s2=document.getElementById('bulk-school-select');
   if(s2)s2.innerHTML=opts;
   const s3=document.getElementById('v-school');
-  if(s3)s3.innerHTML='<option value="">🌐 전체 공개</option>'+opts;
+  if(s3)s3.innerHTML=opts;
 }
 async function bulkAssignSchool(){
   const schoolId=document.getElementById('bulk-school-select').value;
@@ -1982,6 +1999,32 @@ async function setStudentSchool(id,schoolId){
   if(error){notify('변경 실패: '+error.message,'error');return;}
   const u=db.users.find(function(x){return x.id===id;});
   if(u)u.school_id=schoolId||null;
+  renderStudents();
+}
+async function setStudentSchoolName(id,val){
+  val=(val||'').trim();
+  const{error}=await sb.from('users').update({school_name:val||null}).eq('id',id);
+  if(error){notify('학교 변경 실패: '+error.message,'error');return;}
+  const u=db.users.find(function(x){return x.id===id;});
+  if(u)u.school_name=val||null;
+}
+async function editStudentName(id){
+  const u=db.users.find(function(x){return x.id===id;});
+  if(!u)return;
+  const nv=prompt('학생 이름 수정:', u.name);
+  if(nv===null)return;
+  const name=(nv||'').trim();
+  if(!name){notify('이름을 입력하세요.','error');return;}
+  const{error}=await sb.from('users').update({name:name}).eq('id',id);
+  if(error){notify('이름 변경 실패: '+error.message,'error');return;}
+  u.name=name;notify('이름이 변경되었습니다.','success');renderStudents();
+}
+async function setStudentStatus(id,st){
+  const{error}=await sb.from('users').update({student_status:st||null}).eq('id',id);
+  if(error){notify('상태 변경 실패: '+error.message,'error');return;}
+  const u=db.users.find(function(x){return x.id===id;});
+  if(u)u.student_status=st||null;
+  notify(st?(u.name+' → '+st+' 처리'):(u.name+' → 재원 복구'),'info');
   renderStudents();
 }
 async function approveStudent(id){
@@ -2044,24 +2087,31 @@ function renderStudents(){
   });
   document.getElementById('student-count').textContent=`총 ${allSts.length}명`+(studentSchoolFilter?` · 표시 ${sts.length}명`:'');
   const tbl=document.getElementById('student-tbl');
-  if(!sts.length){tbl.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text2)">등록된 학생이 없습니다.</td></tr>';return;}
+  if(!sts.length){tbl.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text2)">등록된 학생이 없습니다.</td></tr>';return;}
   const schoolOptsHtml='<option value="">미배정</option>'+(qaDb.schools||[]).map(function(sc){return '<option value="'+sc.id+'">'+sc.name+'</option>';}).join('');
-  tbl.innerHTML=`<thead><tr><th>이름</th><th>아이디</th><th>학년</th><th>평균 진도</th><th>완료 강의</th><th></th></tr></thead><tbody>`+
+  tbl.innerHTML=`<thead><tr><th>이름</th><th>아이디</th><th>학교</th><th>학년</th><th>진도</th><th>완료</th><th>상태·관리</th></tr></thead><tbody>`+
     sts.map(s=>{
       const vids=normalVideos();
       const progs=vids.map(v=>getPct(s.id,v.id));
       const avg=progs.length?Math.round(progs.reduce((a,b)=>a+b,0)/progs.length):0;
       const doneC=progs.filter(p=>p>=100).length;
+      const inactive=(s.student_status==='휴학'||s.student_status==='졸업');
       const schoolSel=`<select class="form-input" style="font-size:11px;padding:4px 6px" onchange="setStudentSchool('${s.id}',this.value)">${schoolOptsHtml}</select>`;
-      return`<tr><td style="font-weight:600">${s.name}</td><td><code style="font-family:var(--mono);font-size:11px;color:var(--text2)">${s.id}</code></td>
+      const snVal=(s.school_name||'').replace(/"/g,'&quot;');
+      return`<tr style="${inactive?'opacity:0.5':''}">
+        <td style="font-weight:600;white-space:nowrap">${s.name} <button class="btn btn-sm" style="padding:1px 5px;font-size:11px" onclick="editStudentName('${s.id}')" title="이름 수정">✏️</button>${inactive?` <span class="badge" style="background:var(--border);color:var(--text2)">${s.student_status}</span>`:''}</td>
+        <td><code style="font-family:var(--mono);font-size:11px;color:var(--text2)">${s.id}</code></td>
+        <td><input class="form-input" style="font-size:11px;padding:4px 6px;width:100px" list="school-datalist" value="${snVal}" placeholder="학교" onchange="setStudentSchoolName('${s.id}',this.value)"/></td>
         <td>${schoolSel}</td>
-        <td><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="width:90px"><div class="pbar-fill" style="width:${avg}%;background:${pctColor(avg)}"></div></div><span style="font-size:12px;font-weight:600;color:${pctColor(avg)}">${avg}%</span></div></td>
+        <td><div style="display:flex;align-items:center;gap:6px"><div class="pbar" style="width:64px"><div class="pbar-fill" style="width:${avg}%;background:${pctColor(avg)}"></div></div><span style="font-size:12px;font-weight:600;color:${pctColor(avg)}">${avg}%</span></div></td>
         <td style="font-weight:600;color:${doneC===vids.length&&vids.length>0?'var(--green)':'var(--text)'}">${doneC}/${vids.length}</td>
-        <td><button class="btn btn-sm red" onclick="deleteStudent('${s.id}')">삭제</button></td></tr>`;
+        <td style="white-space:nowrap"><select class="form-input" style="font-size:11px;padding:4px 6px;width:72px" onchange="setStudentStatus('${s.id}',this.value)"><option value="">재원</option><option value="휴학">휴학</option><option value="졸업">졸업</option></select> <button class="btn btn-sm red" style="padding:2px 6px;font-size:11px" onclick="deleteStudent('${s.id}')">삭제</button></td></tr>`;
     }).join('')+'</tbody>';
   Array.from(tbl.querySelectorAll('tbody tr')).forEach(function(tr,i){
-    const sel=tr.querySelector('select');
-    if(sel)sel.value=sts[i].school_id||'';
+    const gsel=tr.querySelector('td:nth-child(4) select');
+    if(gsel)gsel.value=sts[i].school_id||'';
+    const ssel=tr.querySelector('td:nth-child(7) select');
+    if(ssel)ssel.value=sts[i].student_status||'';
   });
 }
 
@@ -2359,28 +2409,39 @@ function sNav(panel){
 }
 
 /* ===== 학생: 일반 강의 ===== */
+function lectureCardHtml(v){
+  const p=getPct(session.id,v.id),ws=getWatchSec(session.id,v.id),lp=getLastPos(session.id,v.id);
+  const t=thumb(v.url);
+  return`<div class="lecture-item">
+    <div class="lecture-thumb">${t?`<img src="${t}" alt="">`:
+      `<div class="yt-icon" style="width:32px;height:32px"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>`}</div>
+    <div class="lecture-body">
+      <h4>${v.title}</h4>
+      <div class="lmeta">${v.description||'강의 설명 없음'}${ws>0?` · <span style="color:var(--green)">${fmtTime(ws)} 시청</span>`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="pbar" style="width:110px"><div class="pbar-fill" style="width:${p}%;background:${pctColor(p)}"></div></div>
+        <span class="badge ${pctBadge(p)}">${pctLabel(p)}</span>
+        ${lp>0&&p<100?`<span style="font-size:11px;color:var(--text2)">${fmtTime(lp)}까지</span>`:''}
+      </div>
+    </div>
+    <button class="btn blue btn-sm" onclick="openPlay('${v.id}')">▶ ${lp>0&&p<100?'이어보기':'시청하기'}</button>
+  </div>`;
+}
 function renderLectures(){
   const el=document.getElementById('student-lectures');
   const myClass=(session&&session.school_id)||null;
-  const vids=normalVideos().filter(function(v){return !v.school_id || v.school_id===myClass;});
-  if(!vids.length){el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg><p>강사가 등록한 강의가 없습니다.</p></div>';return;}
-  el.innerHTML=vids.map(v=>{
-    const p=getPct(session.id,v.id),ws=getWatchSec(session.id,v.id),lp=getLastPos(session.id,v.id);
-    const t=thumb(v.url);
-    return`<div class="lecture-item">
-      <div class="lecture-thumb">${t?`<img src="${t}" alt="">`:
-        `<div class="yt-icon" style="width:32px;height:32px"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>`}</div>
-      <div class="lecture-body">
-        <h4>${v.title}</h4>
-        <div class="lmeta">${v.description||'강의 설명 없음'}${ws>0?` · <span style="color:var(--green)">${fmtTime(ws)} 시청</span>`:''}</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="pbar" style="width:110px"><div class="pbar-fill" style="width:${p}%;background:${pctColor(p)}"></div></div>
-          <span class="badge ${pctBadge(p)}">${pctLabel(p)}</span>
-          ${lp>0&&p<100?`<span style="font-size:11px;color:var(--text2)">${fmtTime(lp)}까지</span>`:''}
-        </div>
-      </div>
-      <button class="btn blue btn-sm" onclick="openPlay('${v.id}')">▶ ${lp>0&&p<100?'이어보기':'시청하기'}</button>
-    </div>`;
+  const myGradeName=myClass?(((qaDb.schools||[]).find(function(s){return s.id===myClass;})||{}).name||''):'';
+  const mine=normalVideos().filter(function(v){return !v.school_id || v.school_id===myClass;});
+  const groups=[
+    [ (myGradeName?('📚 '+myGradeName+' 강의'):'📚 내 강의'), mine ],
+    [ '📝 모의고사 기출', allVideos().filter(function(v){return v.subtype==='mock';}) ],
+    [ '📖 문법 개념', allVideos().filter(function(v){return v.subtype==='grammar';}) ],
+    [ '📜 고전시가', allVideos().filter(function(v){return v.subtype==='classic';}) ]
+  ];
+  if(!groups.some(function(g){return g[1].length;})){el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg><p>등록된 강의가 없습니다.</p></div>';return;}
+  el.innerHTML=groups.map(function(g){
+    if(!g[1].length)return '';
+    return '<div class="section-divider" style="margin:1rem 0 0.6rem"><div class="section-divider-line"></div><div class="section-divider-label">'+g[0]+'</div><div class="section-divider-line"></div></div>'+g[1].map(lectureCardHtml).join('');
   }).join('');
 }
 
@@ -3614,20 +3675,12 @@ var qaState={school:null,week:null,prob:null};
 var sQaCurrentCat='homework'; // 'homework' or 'free'
 
 function sQaSetCat(cat){
-  sQaCurrentCat=cat;
-  var hwBtn=document.getElementById('qa-cat-homework');
-  var frBtn=document.getElementById('qa-cat-free');
+  // 자유 질문만 사용 — 과제 질문 뷰는 항상 숨김
+  sQaCurrentCat='free';
   var hwView=document.getElementById('s-qa-homework-view');
   var frView=document.getElementById('s-qa-free-view');
-  if(cat==='homework'){
-    hwBtn.style.background='rgba(245,168,0,0.1)';hwBtn.style.color='var(--accent)';hwBtn.style.borderColor='rgba(245,168,0,0.3)';
-    frBtn.style.background='var(--card)';frBtn.style.color='var(--text2)';frBtn.style.borderColor='var(--border)';
-    hwView.style.display='block';frView.style.display='none';
-  } else {
-    frBtn.style.background='rgba(245,168,0,0.1)';frBtn.style.color='var(--accent)';frBtn.style.borderColor='rgba(245,168,0,0.3)';
-    hwBtn.style.background='var(--card)';hwBtn.style.color='var(--text2)';hwBtn.style.borderColor='var(--border)';
-    hwView.style.display='none';frView.style.display='block';
-  }
+  if(hwView)hwView.style.display='none';
+  if(frView)frView.style.display='block';
 }
 
 async function submitFreeQa(){
