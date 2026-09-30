@@ -620,10 +620,11 @@ input,button{font-family:var(--font)}
                 <label class="btn" style="cursor:pointer;flex:1;text-align:center">🖼️ 찍은 사진 올리기<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="omrAutoGradeFile(this.files[0]);this.value=''"></label>
               </div>
               <div style="font-size:11px;color:var(--text2);margin-top:8px">2027학년도 9월 평가원 OMR은 필적 확인란에 ‘27년 9월 평가원’이라고 적으면 연결돼요.</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:4px">사진은 판독을 위해 Anthropic Claude API로 전송됩니다. 홈페이지에는 사진을 저장하지 않아요.</div>
             </div>
           </div>
           <div class="card" style="margin-bottom:1rem">
-            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div><div style="padding:0 1.25rem 1rem"><button id="sept-mock-register" class="btn btn-sm" onclick="registerSeptMockExams()">2026년 9월 모의고사 채점 등록</button><div id="sept-mock-register-status" style="font-size:11px;color:var(--text2);margin-top:6px">21회 × 화작·언매 · 배점 미확인으로 정답 개수와 정답률 표시 · 사진은 기기 안에서 판독</div></div>
+            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div><div style="padding:0 1.25rem 1rem"><button id="sept-mock-register" class="btn btn-sm" onclick="registerSeptMockExams()">2026년 9월 모의고사 채점 등록</button><div id="sept-mock-register-status" style="font-size:11px;color:var(--text2);margin-top:6px">21회 × 화작·언매 · 배점 미확인으로 정답 개수와 정답률 표시</div></div>
           </div>
           <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🏫</span> 클리닉</div><div class="section-divider-line"></div></div>
           <div class="card" style="margin-bottom:1rem">
@@ -1076,6 +1077,7 @@ input,button{font-family:var(--font)}
                 <label class="btn" style="cursor:pointer;flex:1;text-align:center">🖼️ 찍은 사진 올리기<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="sOmrAutoGradeFile(this.files[0]);this.value=''"></label>
               </div>
               <div id="s-omr-auto-status" style="font-size:11px;color:var(--text2);margin-top:8px">2027학년도 9월 평가원 OMR은 필적 확인란에 ‘27년 9월 평가원’이라고 적으면 연결돼요.</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:4px">사진은 판독을 위해 Anthropic Claude API로 전송됩니다. 홈페이지에는 사진을 저장하지 않아요.</div>
             </div>
           </div>
           <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🏫</span> 클리닉 채점</div><div class="section-divider-line"></div></div>
@@ -1591,6 +1593,7 @@ input,button{font-family:var(--font)}
 
 <script src="omr-local.js?v=20260930-fingerprint1"></script>
 <script src="omr-fingerprint.js?v=20260930-title1"></script>
+<script src="omr-api.js?v=20260930-api1"></script>
 <script>
 const SB_URL='https://jsdziawffwxcvrvnmmgy.supabase.co';
 const SB_KEY='sb_publishable_NWhdwW4s7rqJ-AcD3Xjs0A_f91vmNAj';
@@ -6174,17 +6177,16 @@ async function omrAutoGradeFile(file){
   openOmrModal();
   document.getElementById('omr-step-student').style.display='none';
   document.getElementById('omr-step-loading').style.display='';
-  document.getElementById('omr-loading-msg').textContent='사진의 마킹과 필적 확인 문구를 기기 안에서 읽는 중...';
+  document.getElementById('omr-loading-msg').textContent='사진의 마킹과 필적 확인 문구를 읽는 중...';
   try{
-    const scan=await scanOmrLocally(file);
+    const scan=await readOmrViaServer(file,session);
     const read=scan.answers,readCount=scan.readCount;
     const ranked=eligible.map(function(exam){
       const hits=exam.questions.reduce(function(n,q,i){return n+(read[i]&&read[i]===String(q.answer)?1:0);},0);
       return {exam:exam,hits:hits};
     }).sort(function(a,b){return b.hits-a.hits;});
     const baseName=function(name){return String(name||'').replace(/ · (화작|언매)$/,'');};
-    const handwriting=await readOmrFingerprint(scan.fingerprintImage);
-    const phrases=rankOmrFingerprints(handwriting);
+    const phrases=rankOmrFingerprints(scan.fingerprint);
     const match=phrases[0],runnerUp=phrases[1];
     if(!match||match.score<16||match.score-(runnerUp?runnerUp.score:0)<5)
       throw new Error('필적 확인 문구를 확실히 구별하지 못했어요. 문구가 선명하게 보이도록 다시 찍어 주세요.');
@@ -6203,7 +6205,7 @@ async function omrAutoGradeFile(file){
     omrCurrentPhoto=file;omrReadAnswers=read;omrAutoCandidates=ranked;
     document.getElementById('omr-review-img').src=URL.createObjectURL(file);
     document.getElementById('omr-auto-exam-wrap').style.display='none';
-    document.getElementById('omr-auto-exam-note').textContent='필적 확인 문구로 '+chosen.exam.name+'을 확인했어요. 읽은 마킹 '+readCount+'/45 · 학생과 마킹을 확인해 주세요. 사진은 외부로 보내지 않아요.';
+    document.getElementById('omr-auto-exam-note').textContent='필적 확인 문구로 '+chosen.exam.name+'을 확인했어요. 읽은 마킹 '+readCount+'/45 · 학생과 마킹을 확인해 주세요.';
     renderOmrReview();
     document.getElementById('omr-review-hint').textContent='필적 문구로 '+chosen.exam.name+'을 찾았어요. 읽은 마킹 '+readCount+'/45 · 정답 '+chosen.hits+'/45 · 학생과 마킹을 확인한 뒤 채점 확정을 눌러 주세요.';
   }catch(e){closeOmrModal();alert('사진만으로 채점하지 못했어요: '+e.message);}
@@ -7088,7 +7090,7 @@ async function sExamOpenForGrading(examId){
   return true;
 }
 
-/* 학생: 사진의 필적 확인란으로 시험을 찾고, 기기에서 마킹을 읽는다. */
+/* 학생: 사진의 필적 확인란으로 시험을 찾고, 마킹을 검토한다. */
 async function sOmrAutoGradeFile(file){
   if(!file)return;
   if(!session||session.role!=='student'){alert('학생 계정으로 로그인해 주세요.');return;}
@@ -7096,9 +7098,8 @@ async function sOmrAutoGradeFile(file){
   const status=document.getElementById('s-omr-auto-status');
   status.textContent='사진에서 시험과 답안을 읽는 중...';
   try{
-    const scan=await scanOmrLocally(file);
-    const handwriting=await readOmrFingerprint(scan.fingerprintImage);
-    const phrases=rankOmrFingerprints(handwriting);
+    const scan=await readOmrViaServer(file,session);
+    const phrases=rankOmrFingerprints(scan.fingerprint);
     const match=phrases[0],runnerUp=phrases[1];
     if(!match||match.score<16||match.score-(runnerUp?runnerUp.score:0)<5)
       throw new Error('필적 확인란을 확실히 읽지 못했어요. 문구가 선명하게 보이도록 다시 찍어 주세요.');
