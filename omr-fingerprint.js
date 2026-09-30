@@ -36,8 +36,76 @@ function rankOmrFingerprints(text){
   const tokens=String(text||'').match(/[가-힣]{2,}/g)||[];
   return Object.entries(OMR_FINGERPRINTS).map(function([id,phrase]){
     const scores=tokens.map(function(token){return omrLocalAlignment(token,phrase);}).sort(function(a,b){return b-a;});
-    return {id:id,phrase:phrase,score:(scores[0]||0)+(scores[1]||0)*0.35};
+    return {id:id,phrase:phrase,score:(scores[0]||0)+(scores[1]||0)*0.35+
+      omrLocalAlignment(tokens.join(''),phrase)*0.25};
   }).sort(function(a,b){return b.score-a.score;});
+}
+
+let omrKoreanModelPromise=null;
+let omrKoreanScriptPromise=null;
+function loadOmrKoreanScript(){
+  if(window.ort)return Promise.resolve();
+  if(!omrKoreanScriptPromise){
+    omrKoreanScriptPromise=new Promise(function(resolve,reject){
+      const script=document.createElement('script');
+      script.src='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.min.js';
+      script.onload=resolve;
+      script.onerror=function(){reject(new Error('기기 내 한국어 필적 모델을 불러오지 못했어요.'));};
+      document.head.appendChild(script);
+    }).catch(function(error){omrKoreanScriptPromise=null;throw error;});
+  }
+  return omrKoreanScriptPromise;
+}
+
+async function loadOmrKoreanModel(){
+  if(!omrKoreanModelPromise){
+    omrKoreanModelPromise=(async function(){
+      await loadOmrKoreanScript();
+      const base=new URL('.',document.baseURI);
+      const runtime='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+      window.ort.env.wasm.wasmPaths=runtime;
+      window.ort.env.wasm.numThreads=1;
+      const [session,response]=await Promise.all([
+        window.ort.InferenceSession.create(new URL('korean_rec.onnx',base).href,{executionProviders:['wasm']}),
+        fetch(new URL('korean_dict.txt',base))
+      ]);
+      if(!response.ok)throw new Error('한국어 판독 문자표를 불러오지 못했어요.');
+      const dictionary=['',...(await response.text()).trimEnd().split(/\r?\n/)];
+      return {session:session,dictionary:dictionary};
+    })().catch(function(error){omrKoreanModelPromise=null;throw error;});
+  }
+  return omrKoreanModelPromise;
+}
+
+async function readOmrKoreanLine(imageUrl){
+  const model=await loadOmrKoreanModel();
+  const image=new Image();
+  image.src=imageUrl;
+  await image.decode();
+  const sourceHeight=Math.round(image.height*.57);
+  const width=Math.round(image.width*48/sourceHeight);
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=48;
+  const context=canvas.getContext('2d',{willReadFrequently:true});
+  context.imageSmoothingQuality='high';
+  context.drawImage(image,0,0,image.width,sourceHeight,0,0,width,48);
+  const pixels=context.getImageData(0,0,width,48).data;
+  const values=new Float32Array(3*48*width);
+  for(let y=0;y<48;y++)for(let x=0;x<width;x++)
+    for(let channel=0;channel<3;channel++)
+      values[channel*48*width+y*width+x]=(pixels[(y*width+x)*4+channel]/255-.5)/.5;
+  const result=await model.session.run({x:new window.ort.Tensor('float32',values,[1,3,48,width])});
+  const output=result[model.session.outputNames[0]],classes=output.dims[2],steps=output.dims[1];
+  let previous=-1,raw='';
+  for(let step=0;step<steps;step++){
+    let best=0,value=-Infinity;
+    for(let index=0;index<classes;index++){
+      const next=output.data[step*classes+index];
+      if(next>value){value=next;best=index;}
+    }
+    if(best&&best!==previous)raw+=model.dictionary[best]||'';
+    previous=best;
+  }
+  return raw.normalize('NFC');
 }
 
 let omrFingerprintWorkerPromise=null;
@@ -51,7 +119,7 @@ function loadOmrFingerprintScript(){
   });
 }
 
-async function readOmrFingerprint(imageUrl){
+async function readOmrFingerprintTesseract(imageUrl){
   if(!imageUrl)throw new Error('필적 확인란을 사진에서 찾지 못했어요.');
   await loadOmrFingerprintScript();
   if(!omrFingerprintWorkerPromise){
@@ -66,4 +134,16 @@ async function readOmrFingerprint(imageUrl){
   await worker.setParameters({tessedit_pageseg_mode:window.Tesseract.PSM.SINGLE_BLOCK});
   const result=await worker.recognize(imageUrl);
   return result.data.text||'';
+}
+
+async function readOmrFingerprint(imageUrl){
+  if(!imageUrl)throw new Error('필적 확인란을 사진에서 찾지 못했어요.');
+  let firstError=null;
+  try{
+    const text=await readOmrKoreanLine(imageUrl);
+    const ranked=rankOmrFingerprints(text);
+    if(ranked[0]&&ranked[0].score>=16&&ranked[0].score-(ranked[1]?ranked[1].score:0)>=5)return text;
+  }catch(error){firstError=error;}
+  try{return await readOmrFingerprintTesseract(imageUrl);}
+  catch(error){throw firstError||error;}
 }

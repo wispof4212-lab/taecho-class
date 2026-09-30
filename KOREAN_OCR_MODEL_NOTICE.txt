@@ -1,0 +1,10 @@
+Korean OMR handwriting recognition model
+
+Model: korean_PP-OCRv5_mobile_rec (PaddleOCR)
+Source: https://huggingface.co/monkt/paddleocr-onnx/tree/main/languages/korean
+Original project: https://github.com/PaddlePaddle/PaddleOCR
+License: Apache License 2.0
+https://github.com/PaddlePaddle/PaddleOCR/blob/main/LICENSE
+
+The ONNX model and character dictionary are loaded in the user's browser.
+OMR photos are processed locally and are not published in this repository.
