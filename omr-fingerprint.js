@@ -38,11 +38,17 @@ function omrLocalAlignment(token,phrase){
 
 function rankOmrFingerprints(text){
   const tokens=String(text||'').match(/[가-힣]{2,}/g)||[];
-  return Object.entries(OMR_FINGERPRINTS).map(function([id,phrase]){
+  const ranked=Object.entries(OMR_FINGERPRINTS).map(function([id,phrase]){
     const scores=tokens.map(function(token){return omrLocalAlignment(token,phrase);}).sort(function(a,b){return b-a;});
     return {id:id,phrase:phrase,score:(scores[0]||0)+(scores[1]||0)*0.35+
       omrLocalAlignment(tokens.join(''),phrase)*0.25};
-  }).sort(function(a,b){return b.score-a.score;});
+  });
+  // The 2027 September KICE cover phrase is unavailable. A handwritten exam title
+  // in the same box is an explicit substitute; require year, month and issuer.
+  const compact=String(text||'').normalize('NFKC').replace(/[\s.,·-]/g,'');
+  if(/(?:2027|27)(?:학년도|년도|년)?(?:9|구)월?(?:모의평가|평가원)/.test(compact))
+    ranked.push({id:'sep26-03',phrase:'27년 9월 평가원',score:120});
+  return ranked.sort(function(a,b){return b.score-a.score;});
 }
 
 let omrKoreanModelPromise=null;

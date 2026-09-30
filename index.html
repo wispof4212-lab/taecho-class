@@ -608,11 +608,22 @@ input,button{font-family:var(--font)}
 
       <!-- 시험 분석 (교사) -->
       <div class="panel" id="panel-exam">
-        <div class="page-header"><h1>온라인 채점</h1><p>시험을 등록하고 학생들의 오답 경향을 분석하세요</p></div>
+        <div class="page-header"><h1>온라인 채점</h1><p>OMR 사진을 먼저 올리면 시험을 자동으로 찾아요</p></div>
         <!-- 시험 목록 / 등록 -->
         <div id="t-exam-main">
           <div class="card" style="margin-bottom:1rem">
-            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div><div style="padding:0 1.25rem 1rem"><button id="sept-mock-register" class="btn btn-sm" onclick="registerSeptMockExams()">2026년 9월 모의고사 채점 등록</button><label class="btn blue btn-sm" style="display:inline-block;cursor:pointer;margin-left:6px">📷 OMR 사진만 올리기<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="omrAutoGradeFile(this.files[0]);this.value=''"></label><div id="sept-mock-register-status" style="font-size:11px;color:var(--text2);margin-top:6px">21회 × 화작·언매 · 배점 미확인으로 정답 개수와 정답률 표시 · 사진은 기기 안에서 판독</div></div>
+            <div class="card-head"><h3>📷 사진으로 바로 채점</h3></div>
+            <div style="padding:0 1.25rem 1.25rem">
+              <p style="font-size:12px;color:var(--text2);margin:0 0 10px">시험 선택 없이 필적 확인란과 답안 전체가 보이게 찍어 주세요.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <label class="btn blue" style="cursor:pointer;flex:1;text-align:center">📷 OMR 사진 찍기<input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" style="display:none" onchange="omrAutoGradeFile(this.files[0]);this.value=''"></label>
+                <label class="btn" style="cursor:pointer;flex:1;text-align:center">🖼️ 찍은 사진 올리기<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="omrAutoGradeFile(this.files[0]);this.value=''"></label>
+              </div>
+              <div style="font-size:11px;color:var(--text2);margin-top:8px">2027학년도 9월 평가원 OMR은 필적 확인란에 ‘27년 9월 평가원’이라고 적으면 연결돼요.</div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:1rem">
+            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div><div style="padding:0 1.25rem 1rem"><button id="sept-mock-register" class="btn btn-sm" onclick="registerSeptMockExams()">2026년 9월 모의고사 채점 등록</button><div id="sept-mock-register-status" style="font-size:11px;color:var(--text2);margin-top:6px">21회 × 화작·언매 · 배점 미확인으로 정답 개수와 정답률 표시 · 사진은 기기 안에서 판독</div></div>
           </div>
           <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🏫</span> 클리닉</div><div class="section-divider-line"></div></div>
           <div class="card" style="margin-bottom:1rem">
@@ -1053,9 +1064,20 @@ input,button{font-family:var(--font)}
 
       <!-- 시험 분석 (학생) -->
       <div class="panel" id="panel-exam">
-        <div class="page-header"><h1>온라인 채점</h1><p>목록에서 시험을 선택하면 바로 채점할 수 있어요</p></div>
+        <div class="page-header"><h1>온라인 채점</h1><p>OMR 사진을 찍으면 시험을 찾아 채점해요</p></div>
         <!-- 시험 목록 -->
         <div id="s-exam-entry">
+          <div class="card" style="margin-bottom:1rem">
+            <div class="card-head"><h3>📷 사진으로 바로 채점</h3></div>
+            <div style="padding:0 1.25rem 1.25rem">
+              <p style="font-size:12px;color:var(--text2);margin:0 0 10px">시험을 고르지 않아도 돼요. 필적 확인란과 답안 전체가 보이게 찍어 주세요.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <label class="btn blue" style="cursor:pointer;flex:1;text-align:center">📷 OMR 사진 찍기<input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" style="display:none" onchange="sOmrAutoGradeFile(this.files[0]);this.value=''"></label>
+                <label class="btn" style="cursor:pointer;flex:1;text-align:center">🖼️ 찍은 사진 올리기<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="sOmrAutoGradeFile(this.files[0]);this.value=''"></label>
+              </div>
+              <div id="s-omr-auto-status" style="font-size:11px;color:var(--text2);margin-top:8px">2027학년도 9월 평가원 OMR은 필적 확인란에 ‘27년 9월 평가원’이라고 적으면 연결돼요.</div>
+            </div>
+          </div>
           <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🏫</span> 클리닉 채점</div><div class="section-divider-line"></div></div>
           <div id="s-exam-clinic-groups" style="margin-bottom:1rem"></div>
           <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>📝</span> 모의고사 채점</div><div class="section-divider-line"></div></div>
@@ -1568,7 +1590,7 @@ input,button{font-family:var(--font)}
 <div class="notif" id="notif"></div>
 
 <script src="omr-local.js?v=20260930-fingerprint1"></script>
-<script src="omr-fingerprint.js?v=20260930-korean3"></script>
+<script src="omr-fingerprint.js?v=20260930-title1"></script>
 <script>
 const SB_URL='https://jsdziawffwxcvrvnmmgy.supabase.co';
 const SB_KEY='sb_publishable_NWhdwW4s7rqJ-AcD3Xjs0A_f91vmNAj';
@@ -7036,11 +7058,11 @@ async function sExamOpenForGrading(examId){
     sb.from('exams').select('*').eq('id',examId).single(),
     sb.from('exam_responses').select('*').eq('exam_id',examId).eq('student_name',myName).maybeSingle()
   ]);
-  if(e1||!found){alert('시험 정보를 불러오지 못했어요.');return;}
+  if(e1||!found){alert('시험 정보를 불러오지 못했어요.');return false;}
   if(resp&&!resp.regrade_approved){
     alert('이미 제출한 시험이에요. 다시 채점하려면 선생님 승인이 필요해요.');
     renderSExam();
-    return;
+    return false;
   }
   sExamData=found;sExamPriorResponse=resp||null;
   sExamAnswers={};sExamPhotos={};sExamThoughts={};sExamSelectedQ=null;sWrongChecked={};sExamFullAnswers={};
@@ -7062,6 +7084,57 @@ async function sExamOpenForGrading(examId){
     renderSExamAnswerGrid();
   }
   showSExamView('check');
+  return true;
+}
+
+/* 학생: 사진의 필적 확인란으로 시험을 찾고, 기기에서 마킹을 읽는다. */
+async function sOmrAutoGradeFile(file){
+  if(!file)return;
+  if(!session||session.role!=='student'){alert('학생 계정으로 로그인해 주세요.');return;}
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)){alert('JPG·PNG·WebP 사진을 선택해 주세요.');return;}
+  const status=document.getElementById('s-omr-auto-status');
+  status.textContent='사진에서 시험과 답안을 읽는 중...';
+  try{
+    const scan=await scanOmrLocally(file);
+    const handwriting=await readOmrFingerprint(scan.fingerprintImage);
+    const phrases=rankOmrFingerprints(handwriting);
+    const match=phrases[0],runnerUp=phrases[1];
+    if(!match||match.score<16||match.score-(runnerUp?runnerUp.score:0)<5)
+      throw new Error('필적 확인란을 확실히 읽지 못했어요. 문구가 선명하게 보이도록 다시 찍어 주세요.');
+    const item=SEPT_MOCK_KEYS.find(function(x){return x.id===match.id;});
+    if(!item)throw new Error('사진에 맞는 모의고사가 아직 등록되지 않았어요.');
+    const {data:exams,error}=await sb.from('exams').select('*').eq('category','mock');
+    if(error||!exams)throw new Error('등록된 시험을 불러오지 못했어요.');
+    const sameExam=exams.filter(function(exam){
+      return exam.total_q===45&&Array.isArray(exam.questions)&&exam.questions.length===45&&
+        (exam.name.endsWith(' · '+item.title+' · 화작')||exam.name.endsWith(' · '+item.title+' · 언매'));
+    });
+    if(!sameExam.length)throw new Error(item.title+' 시험의 정답이 아직 등록되지 않았어요.');
+    const scored=sameExam.map(function(exam){
+      const hits=exam.questions.reduce(function(n,q,i){return n+(scan.answers[i]&&scan.answers[i]===String(q.answer)?1:0);},0);
+      return {exam:exam,hits:hits};
+    }).sort(function(a,b){return b.hits-a.hits;});
+    const selected=scan.track?scored.find(function(x){return x.exam.name.endsWith(' · '+scan.track);}):scored[0];
+    if(!selected||(!scan.track&&(!scored[1]||selected.hits-scored[1].hits<3)))
+      throw new Error('화작·언매 표시를 구별하지 못했어요. OMR 전체가 보이도록 다시 찍어 주세요.');
+    const opened=await sExamOpenForGrading(selected.exam.id);
+    if(!opened){status.textContent='이미 제출한 시험이라면 선생님께 재채점을 요청해 주세요.';return;}
+    sOmrCurrentPhoto=null;
+    sExamFullAnswers={};
+    scan.answers.forEach(function(answer,i){if(answer)sExamFullAnswers[i]=answer;});
+    document.getElementById('s-exam-full-choice').style.display='none';
+    document.getElementById('s-exam-full-grid-wrap').style.display='block';
+    const preview=document.getElementById('s-omr-photo-preview');
+    preview.replaceChildren();
+    const note=document.createElement('div');
+    note.style.cssText='font-size:12px;color:var(--text2);margin-bottom:10px';
+    note.textContent='필적 확인란으로 '+selected.exam.name+'을 찾았어요. 마킹 '+scan.readCount+'/45개를 읽었어요. 잘못 읽은 답은 눌러서 고친 뒤 제출해 주세요.';
+    preview.appendChild(note);
+    renderSExamFullGrid();
+  }catch(error){
+    status.textContent='사진을 읽지 못했어요. 다시 찍거나 선생님께 알려 주세요.';
+    alert('사진으로 채점하지 못했어요: '+error.message);
+  }
 }
 
 /* ── FULL 모드: 문항별 답 선택 온라인 시험 (직접 체크 또는 OMR 사진) ── */
