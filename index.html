@@ -233,6 +233,46 @@ input,button{font-family:var(--font)}
 .mobile-tab svg{width:20px;height:20px;fill:currentColor}
 .mobile-tab.active{color:var(--accent)}
 .mobile-tab.active svg{fill:var(--accent)}
+
+.student-home-hero{position:relative;overflow:hidden;min-height:292px;border:1px solid #edd9a9;border-radius:22px;background:radial-gradient(circle at 82% 28%,#fff2c7 0,#fff2c7 20%,transparent 45%),linear-gradient(130deg,#fffdf4 0%,#fff6dd 66%,#f9e8bd 100%);box-shadow:0 14px 34px rgba(110,78,18,.08)}
+.student-home-hero:before{content:"";position:absolute;width:240px;height:240px;border:1px solid rgba(178,134,45,.18);border-radius:50%;right:-24px;top:-78px}
+.student-home-copy{position:relative;z-index:1;padding:34px 30px 32px;max-width:66%}
+.student-home-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;color:#9d752c;margin-bottom:20px}
+.student-home-title{font-family:Georgia,'Noto Serif KR',serif;font-size:30px;line-height:1.4;letter-spacing:-.05em;color:#332913;margin:0 0 10px}
+.student-home-desc{font-size:14px;color:#776546;line-height:1.8}
+.student-home-tag{display:inline-flex;align-items:center;gap:7px;margin-top:25px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid rgba(177,134,51,.22);font-size:12px;font-weight:700;color:#725216}
+.student-home-tag:before{content:"";width:6px;height:6px;border-radius:50%;background:#d7a139}
+.student-home-character{position:absolute;z-index:1;right:3%;bottom:-4px;width:31%;max-width:240px;max-height:92%;object-fit:contain;object-position:bottom}
+.student-home-info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
+.student-home-info-card{border:1px solid var(--border);border-radius:14px;background:#fff;padding:17px 18px}
+.student-home-info-label{font-size:11px;color:#a28043;font-weight:800;letter-spacing:.08em;margin-bottom:7px}
+.student-home-info-main{font-size:15px;color:var(--text);font-weight:700;line-height:1.55}
+.student-home-info-sub{font-size:12px;color:var(--text2);margin-top:5px;line-height:1.65}
+.ak-week-title{font-size:14px;font-weight:800;color:#775321;margin:18px 0 9px}
+.ak-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px}
+.ak-card-title{font-size:14px;font-weight:700;color:var(--text)}
+.ak-card-sub{font-size:11px;color:var(--text2);margin-top:3px}
+.ak-card-arrow{font-size:12px;font-weight:700;color:#a16d12;white-space:nowrap}
+.ak-answer-section{padding:15px 16px;margin-bottom:10px}
+.ak-answer-heading{font-size:14px;font-weight:800;margin-bottom:11px;color:#6c4d1d}
+.ak-answer-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.ak-answer-cell{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:3px;border:1px solid #f0e3c3;background:#fffaf0;border-radius:8px;padding:7px 9px}
+.ak-answer-num{font-size:10px;color:#8b754d}
+.ak-answer-val{font-size:17px;line-height:1;color:#332913;font-weight:800}
+@media(max-width:700px){
+ .student-home-hero{min-height:249px}
+ .student-home-copy{padding:23px 18px;max-width:67%}
+ .student-home-eyebrow{font-size:9px;margin-bottom:13px}
+ .student-home-title{font-size:22px}
+ .student-home-desc{font-size:12px}
+ .student-home-tag{margin-top:16px;font-size:10px;padding:6px 9px}
+ .student-home-character{width:39%;right:-2%;max-height:89%}
+ .student-home-info{grid-template-columns:1fr}
+ .ak-answer-grid{gap:4px}
+ .ak-answer-cell{padding:6px 4px}
+ .ak-answer-num{font-size:9px}
+ .ak-answer-val{font-size:14px}
+}
 </style>
 </head>
 <body>
@@ -838,17 +878,17 @@ input,button{font-family:var(--font)}
       </div>
       <nav class="sidebar-nav">
         <div class="nav-item active" onclick="sNav('home')" data-p="home"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>홈</div>
-        <div class="nav-item" onclick="sNav('lectures')" data-p="lectures"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>강의 목록</div>
-        <div class="nav-item" style="display:none" onclick="sNav('review')" data-p="review"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>복습 신청</div>
+        <div class="nav-item" onclick="sNav('lectures')" data-p="lectures"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>내 강의</div>
         <div class="nav-item" onclick="sNav('mypage')" data-p="mypage"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>내 진도</div>
+        <div class="nav-item" onclick="sNav('answerkey')" data-p="answerkey"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>모의고사 답지</div>
+        <div class="nav-item" onclick="sNav('exam')" data-p="exam"><svg viewBox="0 0 24 24"><path d="M9 5H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-2c0-1.1-.9-2-2-2s-2 .9-2 2zm2-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-3-3 1.41-1.41L9 15.17l5.59-5.59L16 11l-7 7z"/></svg>온라인 채점</div>
         <div class="nav-item" onclick="sNav('qa')" data-p="qa" id="nav-qa-s" style="position:relative"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>Q&A</div>
+        <div class="nav-item" onclick="sNav('vocab')" data-p="vocab"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 13.5L4.24 12.5 2 11.15v3.7L12 20l10-5.15v-3.7l-2.24 1.35L12 16.5z"/></svg>오늘의 어휘</div>
+        <div class="nav-item" style="display:none" onclick="sNav('review')" data-p="review"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>복습 신청</div>
         <div class="nav-item" style="display:none" onclick="sNav('cert')" data-p="cert"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>인증</div>
         <div class="nav-item" style="display:none" onclick="sNav('clinic')" data-p="clinic"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>클리닉 변동</div>
         <div class="nav-item" style="display:none" onclick="sNav('study')" data-p="study"><svg viewBox="0 0 24 24"><path d="M12 20c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-18C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm.5 5H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>공부 타이머</div>
         <div class="nav-item" style="display:none" onclick="sNav('oxreview')" data-p="oxreview"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>오답 재풀이</div>
-        <div class="nav-item" onclick="sNav('exam')" data-p="exam"><svg viewBox="0 0 24 24"><path d="M9 5H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-2c0-1.1-.9-2-2-2s-2 .9-2 2zm2-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-3-3 1.41-1.41L9 15.17l5.59-5.59L16 11l-7 7z"/></svg>온라인 채점</div>
-        <div class="nav-item" onclick="sNav('answerkey')" data-p="answerkey"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>모의고사 답지</div>
-        <div class="nav-item" onclick="sNav('vocab')" data-p="vocab"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 13.5L4.24 12.5 2 11.15v3.7L12 20l10-5.15v-3.7l-2.24 1.35L12 16.5z"/></svg>오늘의 어휘</div>
       </nav>
       <div class="sidebar-footer">
         <button id="pwa-install-btn-t" onclick="installPWA()" style="display:none;width:100%;margin-bottom:6px;background:rgba(245,168,0,0.1);border:1px solid rgba(245,168,0,0.3);color:var(--accent);border-radius:var(--radius-sm);padding:8px;font-size:12px;cursor:pointer;font-family:inherit">📲 앱으로 설치</button>
@@ -857,17 +897,36 @@ input,button{font-family:var(--font)}
     </div>
     <div class="main"><div class="main-inner">
       <div class="panel active" id="panel-home">
-        <div class="page-header"><h1>안녕하세요, <span id="home-greet-name">학생</span>님 👋</h1><p>오늘 할 일을 확인해보세요</p></div>
-        <div id="home-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+        <div class="student-home-hero">
+          <div class="student-home-copy">
+            <div class="student-home-eyebrow">TAECHO KOREAN · 모의고사반</div>
+            <h1 class="student-home-title">안녕하세요,<br><span id="home-greet-name">학생</span>님</h1>
+            <p class="student-home-desc">오늘도 차근차근, 한 문제씩<br>실력을 쌓아가요.</p>
+            <div class="student-home-tag">9월 모의고사 정답 21개 정리 완료</div>
+          </div>
+          <img class="student-home-character" src="teacher-home.webp" alt="책을 들고 인사하는 태초 국어 선생님">
+        </div>
+        <div class="student-home-info">
+          <div class="student-home-info-card">
+            <div class="student-home-info-label">9월 자료</div>
+            <div class="student-home-info-main">1~4주차 모의고사 21개</div>
+            <div class="student-home-info-sub">공통 · 화법과 작문 · 언어와 매체 정답을 나누어 정리했어요.</div>
+          </div>
+          <div class="student-home-info-card">
+            <div class="student-home-info-label">정답 확인</div>
+            <div class="student-home-info-main">선택 과목을 먼저 확인해요</div>
+            <div class="student-home-info-sub">35~45번은 화작과 언매의 정답이 달라요.</div>
+          </div>
+        </div>
       </div>
       <div class="panel" id="panel-lectures">
         <div class="page-header"><h1>강의 목록</h1><p>강의를 시청하면 진도가 자동으로 기록됩니다</p></div>
         <div id="student-lectures"></div>
       </div>
       <div class="panel" id="panel-answerkey">
-        <div class="page-header"><h1>모의고사 답지</h1><p>모의고사 이름을 검색해 정답과 해설을 확인하세요</p></div>
+        <div class="page-header"><h1>모의고사 답지</h1><p>9월 모의고사반 정답을 공통·화작·언매로 나누어 확인하세요</p></div>
         <div class="card" style="margin-bottom:1rem"><div style="padding:12px">
-          <input id="ak-search" class="form-input" type="text" placeholder="🔍 모의고사 이름 검색 (예: 6월 모의고사)" oninput="renderAnswerKey()" onkeydown="if(event.key==='Enter')renderAnswerKey()"/>
+          <input id="ak-search" class="form-input" type="text" placeholder="🔍 모의고사 이름 검색 (예: 이감, 강대K)" oninput="renderAnswerKey()" onkeydown="if(event.key==='Enter')renderAnswerKey()"/>
         </div></div>
         <div id="ak-list"></div>
         <div id="ak-detail"></div>
@@ -1108,17 +1167,17 @@ input,button{font-family:var(--font)}
   </div>
   <div class="mobile-tabbar" id="s-tabbar" style="overflow-x:auto">
     <button class="mobile-tab active" onclick="sNav('home')" data-ms="home" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>홈</button>
-    <button class="mobile-tab" onclick="sNav('lectures')" data-ms="lectures" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>강의</button>
-    <button class="mobile-tab" onclick="sNav('review')" data-ms="review" style="min-width:50px;display:none"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>복습신청</button>
+    <button class="mobile-tab" onclick="sNav('lectures')" data-ms="lectures" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>내 강의</button>
     <button class="mobile-tab" onclick="sNav('mypage')" data-ms="mypage" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>내 진도</button>
+    <button class="mobile-tab" onclick="sNav('answerkey')" data-ms="answerkey" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>답지</button>
+    <button class="mobile-tab" onclick="sNav('exam')" data-ms="exam" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M9 5H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-2c0-1.1-.9-2-2-2s-2 .9-2 2zm2-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-3-3 1.41-1.41L9 15.17l5.59-5.59L16 11l-7 7z"/></svg>시험</button>
     <button class="mobile-tab" onclick="sNav('qa')" data-ms="qa" id="mt-qa-s" style="position:relative" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>Q&A</button>
+    <button class="mobile-tab" onclick="sNav('vocab')" data-ms="vocab" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 13.5L4.24 12.5 2 11.15v3.7L12 20l10-5.15v-3.7l-2.24 1.35L12 16.5z"/></svg>어휘</button>
+    <button class="mobile-tab" onclick="sNav('review')" data-ms="review" style="min-width:50px;display:none"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>복습신청</button>
     <button class="mobile-tab" onclick="sNav('cert')" data-ms="cert" style="min-width:50px;display:none"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>인증</button>
     <button class="mobile-tab" onclick="sNav('clinic')" data-ms="clinic" style="min-width:50px;display:none"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>클리닉</button>
     <button class="mobile-tab" onclick="sNav('study')" data-ms="study" style="min-width:50px;display:none"><svg viewBox="0 0 24 24"><path d="M12 20c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-18C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm.5 5H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>타이머</button>
     <button class="mobile-tab" onclick="sNav('oxreview')" data-ms="oxreview" style="min-width:50px;display:none"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>오답재풀이</button>
-    <button class="mobile-tab" onclick="sNav('exam')" data-ms="exam" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M9 5H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-2c0-1.1-.9-2-2-2s-2 .9-2 2zm2-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-3-3 1.41-1.41L9 15.17l5.59-5.59L16 11l-7 7z"/></svg>시험</button>
-    <button class="mobile-tab" onclick="sNav('answerkey')" data-ms="answerkey" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>답지</button>
-    <button class="mobile-tab" onclick="sNav('vocab')" data-ms="vocab" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 13.5L4.24 12.5 2 11.15v3.7L12 20l10-5.15v-3.7l-2.24 1.35L12 16.5z"/></svg>어휘</button>
     <button class="mobile-tab" onclick="doLogout()" style="min-width:50px"><svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>로그아웃</button>
   </div>
 </div>
@@ -1703,25 +1762,15 @@ function launchStudent(){
 
 function renderSHome(){
   var greet=document.getElementById('home-greet-name');
-  if(greet)greet.textContent=session.name||'학생';
-  var grid=document.getElementById('home-grid');
-  if(!grid)return;
-  var cards=[
-    ['🎬','내 강의','강의 목록·시청','lectures'],
-    ['📈','내 진도','시청률 확인','mypage'],
-    ['💬','Q&A','질문하기','qa'],
-    ['📝','온라인 채점','시험·OMR 채점','exam'],
-    ['🔍','모의고사 답지','정답·해설 검색','answerkey'],
-    ['🔤','오늘의 어휘','단어 시험','vocab']
-  ];
-  grid.innerHTML=cards.map(function(c){
-    return '<div class="card" style="cursor:pointer" onclick="sNav(\''+c[3]+'\')">'+
-      '<div style="padding:1.5rem 1rem;text-align:center">'+
-        '<div style="font-size:30px;margin-bottom:8px">'+c[0]+'</div>'+
-        '<div style="font-size:14px;font-weight:700">'+c[1]+'</div>'+
-        '<div style="font-size:11px;color:var(--text2);margin-top:3px">'+c[2]+'</div>'+
-      '</div></div>';
-  }).join('');
+  if(greet)greet.textContent=(session&&session.name)||'학생';
+}
+
+const SEPT_MOCK_KEYS=[{"id":"sep26-01","week":1,"title":"2024 수능 (2023년 11월)","common":"5315322315231445421352133251412234","writing":"45445133251","media":"44134215335"},{"id":"sep26-02","week":1,"title":"이감 온 제8차","common":"5241224531342134531514124234554532","writing":"34452132415","media":"45315152544"},{"id":"sep26-03","week":1,"title":"2027학년도 9월 평가원","common":"4145421312531234545421123311323554","writing":"45543212325","media":"32234142525"},{"id":"sep26-04","week":1,"title":"상상 파이널 1-3","common":"4533345413432224315323245413524323","writing":"24514153324","media":"54354243312"},{"id":"sep26-05","week":1,"title":"한수 파이널 1-2","common":"3452243232515314533451341344142342","writing":"52342541354","media":"53324153334"},{"id":"sep26-06","week":1,"title":"강대K 5회","common":"4215155325414354431532524432234213","writing":"24345213415","media":"43145213254"},{"id":"sep26-07","week":2,"title":"2025학년도 6월 평가원","common":"5221521413345411243341252523435433","writing":"34515452432","media":"45113224255"},{"id":"sep26-08","week":2,"title":"강대K 7회","common":"2245211551533343145234124432135252","writing":"54213142235","media":"45434312513"},{"id":"sep26-09","week":2,"title":"바탕 7회","common":"3154453214432335553343343244125334","writing":"45121243454","media":"15242454354"},{"id":"sep26-10","week":2,"title":"이감 시즌 5-6","common":"1341223545231415513223541553425234","writing":"12443552254","media":"45412341553"},{"id":"sep26-11","week":2,"title":"이감 시즌 6-1","common":"2454135551133424233421544321552451","writing":"42542541513","media":"43552214334"},{"id":"sep26-12","week":3,"title":"2025학년도 9월 평가원","common":"4524431452313515113553144534352133","writing":"52152543244","media":"43415132442"},{"id":"sep26-13","week":3,"title":"상상 파이널 2-2","common":"1251235223521445531432145123252322","writing":"21423415551","media":"25413213454"},{"id":"sep26-14","week":3,"title":"한수 파이널 1-3","common":"3441424333142233123231531425324335","writing":"54241224454","media":"31453124214"},{"id":"sep26-15","week":3,"title":"강대K 8회","common":"3235334235344451533454412541355212","writing":"41313255324","media":"53134425324"},{"id":"sep26-16","week":3,"title":"바탕 5회","common":"3345414523214354433345325133435245","writing":"22155323455","media":"25331455423"},{"id":"sep26-17","week":4,"title":"2025 수능 (2024년 11월)","common":"3454532123153122324144522114354352","writing":"24345431152","media":"54312435213"},{"id":"sep26-18","week":4,"title":"이감 시즌 6-2","common":"4223253413115551452531243424151314","writing":"11422355523","media":"52351134243"},{"id":"sep26-19","week":4,"title":"이감 시즌 6-3","common":"5234534122433155114452543123151253","writing":"12242513531","media":"22151133345"},{"id":"sep26-20","week":4,"title":"한수 파이널 2-9","common":"3541542231351232454445142532453534","writing":"12144555122","media":"45432321552"},{"id":"sep26-21","week":4,"title":"강대K 9회","common":"4332131423154351553522411524522314","writing":"11432325154","media":"21345414523"}];
+function akStaticCells(start,values){
+  const circles=['①','②','③','④','⑤'];
+  return '<div class="ak-answer-grid">'+Array.from(values).map(function(a,i){
+    return '<div class="ak-answer-cell"><span class="ak-answer-num">'+(start+i)+'번</span><span class="ak-answer-val">'+circles[Number(a)-1]+'</span></div>';
+  }).join('')+'</div>';
 }
 
 /* ===== 학생: 모의고사 답지 검색 ===== */
@@ -1740,27 +1789,52 @@ async function renderAnswerKey(){
   const searchEl=document.getElementById('ak-search');
   const kw=(searchEl?searchEl.value:'').trim().toLowerCase();
   if(akExams===null){
-    listEl.innerHTML='<div class="card"><div style="padding:1.5rem;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div></div>';
-    await loadAkExams();
+    akExams=[];
+    loadAkExams(true).then(function(){
+      var panel=document.getElementById('panel-answerkey');
+      if(panel&&panel.classList.contains('active'))renderAnswerKey();
+    });
   }
-  var items=akExams||[];
-  if(kw)items=items.filter(function(e){return (e.name||'').toLowerCase().indexOf(kw)!==-1;});
-  if(!items.length){
-    listEl.innerHTML='<div class="card"><div style="padding:1.5rem;text-align:center;color:var(--text3);font-size:13px">'+((akExams&&akExams.length)?'검색 결과가 없어요':'등록된 모의고사가 없어요')+'</div></div>';
+  const staticItems=SEPT_MOCK_KEYS.filter(function(e){
+    return !kw||e.title.toLowerCase().includes(kw)||('9월 '+e.week+'주차').includes(kw)||'모의고사반'.includes(kw);
+  });
+  const dbItems=(akExams||[]).filter(function(e){return !kw||(e.name||'').toLowerCase().includes(kw);});
+  if(!staticItems.length&&!dbItems.length){
+    listEl.innerHTML='<div class="card"><div style="padding:1.5rem;text-align:center;color:var(--text3);font-size:13px">검색 결과가 없어요</div></div>';
     return;
   }
-  listEl.innerHTML=items.map(function(e){
-    var qn=(e.questions&&e.questions.length)||e.total_q||0;
-    return '<div class="card" style="cursor:pointer;margin-bottom:8px" onclick="akOpen(\''+e.id+'\')"><div style="padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'+
-      '<div><div style="font-size:14px;font-weight:700">'+(e.name||'(이름 없음)')+'</div>'+
-      '<div style="font-size:11px;color:var(--text2);margin-top:3px">총 '+qn+'문항</div></div>'+
-      '<span style="color:var(--accent);font-size:13px;font-weight:700;white-space:nowrap">답지 보기 →</span>'+
-      '</div></div>';
-  }).join('');
+  const parts=[];
+  for(let week=1;week<=4;week++){
+    const group=staticItems.filter(function(e){return e.week===week;});
+    if(!group.length)continue;
+    parts.push('<div class="ak-week-title">2026년 9월 '+week+'주차 · 모의고사반</div>');
+    group.forEach(function(e){
+      parts.push('<div class="card" style="cursor:pointer;margin-bottom:7px" onclick="akOpen(\''+e.id+'\')"><div class="ak-card"><div><div class="ak-card-title">'+e.title+'</div><div class="ak-card-sub">45문항 · 공통 / 화법과 작문 / 언어와 매체</div></div><span class="ak-card-arrow">정답 보기 →</span></div></div>');
+    });
+  }
+  if(dbItems.length){
+    parts.push('<div class="ak-week-title">기타 등록된 모의고사</div>');
+    dbItems.forEach(function(e){
+      const qn=(e.questions&&e.questions.length)||e.total_q||0;
+      parts.push('<div class="card" style="cursor:pointer;margin-bottom:7px" onclick="akOpen(\''+e.id+'\')"><div class="ak-card"><div><div class="ak-card-title">'+(e.name||'(이름 없음)')+'</div><div class="ak-card-sub">총 '+qn+'문항</div></div><span class="ak-card-arrow">정답 보기 →</span></div></div>');
+    });
+  }
+  listEl.innerHTML=parts.join('');
 }
 async function akOpen(examId){
   const detailEl=document.getElementById('ak-detail');
   if(!detailEl)return;
+  const sept=SEPT_MOCK_KEYS.find(function(x){return x.id===examId;});
+  if(sept){
+    detailEl.innerHTML='<div class="card" style="margin:14px 0"><div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px">'+
+      '<div><div style="font-size:12px;color:var(--text2)">2026년 9월 '+sept.week+'주차 · 모의고사반</div><div style="font-size:16px;font-weight:800">'+sept.title+'</div></div>'+
+      '<button class="btn btn-sm" onclick="akClose()">닫기</button></div></div>'+
+      '<div class="card ak-answer-section"><div class="ak-answer-heading">공통 과목 · 1~34번</div>'+akStaticCells(1,sept.common)+'</div>'+
+      '<div class="card ak-answer-section"><div class="ak-answer-heading">화법과 작문 · 35~45번</div>'+akStaticCells(35,sept.writing)+'</div>'+
+      '<div class="card ak-answer-section"><div class="ak-answer-heading">언어와 매체 · 35~45번</div>'+akStaticCells(35,sept.media)+'</div>';
+    if(detailEl.scrollIntoView)detailEl.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
   await loadAkExams();
   var e=(akExams||[]).find(function(x){return String(x.id)===String(examId);});
   if(!e){detailEl.innerHTML='';return;}
