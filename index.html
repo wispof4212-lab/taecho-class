@@ -1101,7 +1101,7 @@ input,button{font-family:var(--font)}
               <div class="card" style="margin-bottom:10px">
                 <div style="padding:1.25rem;text-align:center">
                   <button class="btn blue" style="width:100%;margin-bottom:8px" onclick="sExamFullManualStart()">✏️ 직접 답 체크</button>
-                  <button class="btn" style="width:100%" onclick="sOmrStartCamera()">📷 OMR 사진으로 채점</button>
+                  <button id="s-exam-local-camera-btn" class="btn" style="width:100%" onclick="sOmrStartCamera()">📷 OMR 사진으로 채점 (45문항 양식)</button>
                 </div>
               </div>
             </div>
@@ -1114,7 +1114,7 @@ input,button{font-family:var(--font)}
             </div>
             <div id="s-exam-full-loading" style="display:none;text-align:center;padding:2.5rem 1rem">
               <div class="spinner" style="margin:0 auto 14px"></div>
-              <div style="font-size:13px;color:var(--text2)">AI가 답안지를 읽는 중...</div>
+              <div style="font-size:13px;color:var(--text2)">기기 안에서 답안지를 읽는 중...</div>
             </div>
             <div id="s-exam-full-grid-wrap" style="display:none">
               <div id="s-omr-photo-preview"></div>
@@ -7075,6 +7075,7 @@ async function sExamOpenForGrading(examId){
     fullEl.style.display='block';wrongEl.style.display='none';
     document.getElementById('s-exam-check-sub').textContent='총 '+found.total_q+'문항 · 답을 선택하거나 OMR 사진으로 채점하세요';
     document.getElementById('s-exam-full-choice').style.display='block';
+    document.getElementById('s-exam-local-camera-btn').style.display=found.total_q===45?'block':'none';
     document.getElementById('s-exam-full-camera').style.display='none';
     document.getElementById('s-exam-full-loading').style.display='none';
     document.getElementById('s-exam-full-grid-wrap').style.display='none';
@@ -7231,7 +7232,7 @@ async function sExamSubmitFull(){
   renderSExamResultView(score,correct,wrong,objIdxs.length);
 }
 
-/* 학생 OMR 사진 촬영 채점 (공유 AI 키 사용) */
+/* 학생 OMR 사진 촬영 채점 (기기 안에서 판독) */
 async function sOmrStartCamera(){
   if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){alert('이 브라우저는 카메라 촬영을 지원하지 않아요.');return;}
   try{
@@ -7259,44 +7260,40 @@ function sOmrCapturePhoto(){
   canvas.toBlob(async function(blob){
     if(!blob){notify('사진 촬영 실패','error');sExamBack();return;}
     sOmrCurrentPhoto=new File([blob],'omr.jpg',{type:'image/jpeg'});
-    await sOmrReadWithAI(URL.createObjectURL(blob));
+    await sOmrReadLocally(URL.createObjectURL(blob));
   },'image/jpeg',0.9);
 }
-async function sOmrReadWithAI(previewUrl){
-  const key=getSharedClaudeKey();
-  if(!key){
-    alert('AI 채점에 쓸 API 키가 아직 설정되지 않았어요. 선생님께 로그인 후 키 등록을 요청해주세요.');
-    sExamFullManualStart();
-    return;
-  }
-  const exam=sExamData;
-  const total=exam.total_q;
+async function sOmrReadLocally(previewUrl){
   try{
-    const b64=await new Promise(function(res){const r=new FileReader();r.onload=function(){res(r.result.split(',')[1]);};r.readAsDataURL(sOmrCurrentPhoto);});
-    const promptText='당신은 OMR 답안지를 읽는 전문가입니다. 첨부된 이미지는 학생이 마킹한 OMR 답안지 사진입니다.\n'+
-      '총 문항 수: '+total+'개, 각 문항은 1~5번 중 하나를 마킹합니다.\n'+
-      '사진을 보고 문항 번호 1~'+total+'번까지 각각 마킹된 번호를 읽어서 JSON으로만 답하세요.\n'+
-      '마킹이 없거나 두 개 이상 마킹되어 읽기 애매한 문항은 0으로 표시하세요.\n'+
-      '형식 예시: {"1":3,"2":1,"3":0}\n다른 설명 없이 순수 JSON 객체만 반환하세요.';
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-5',max_tokens:2000,thinking:{type:'disabled'},messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:promptText}]}]})});
-    const data=await resp.json();
-    if(data.error)throw new Error(data.error.message||'AI 응답 오류');
-    const raw=(data.content||[]).map(function(c){return c.text||'';}).join('');
-    let parsed={};
-    try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch(e){parsed={};}
+    if(!sExamData||sExamData.total_q!==45)
+      throw new Error('사진 자동 판독은 현재 45문항 OMR 양식만 지원해요.');
+    const scan=await scanOmrLocally(sOmrCurrentPhoto);
+    const examTrack=sExamData.name.endsWith(' · 화작')?'화작':sExamData.name.endsWith(' · 언매')?'언매':null;
+    if(examTrack&&scan.track&&examTrack!==scan.track)
+      throw new Error('사진의 선택과목은 '+scan.track+'인데 고른 시험은 '+examTrack+'이에요. 시험을 확인해 주세요.');
     sExamFullAnswers={};
-    for(let i=0;i<total;i++){
-      const v=parsed[String(i+1)];
-      sExamFullAnswers[i]=(v&&Number(v)>=1&&Number(v)<=5)?String(v):'';
-    }
+    for(let i=0;i<45;i++)sExamFullAnswers[i]=scan.answers[i]||'';
+    sOmrCurrentPhoto=null;
+    document.getElementById('s-exam-full-loading').style.display='none';
+    document.getElementById('s-exam-full-grid-wrap').style.display='block';
+    const preview=document.getElementById('s-omr-photo-preview');
+    preview.replaceChildren();
+    const img=document.createElement('img');
+    img.src=previewUrl;
+    img.style.cssText='width:100%;border-radius:8px;margin-bottom:6px;max-height:200px;object-fit:contain;background:var(--bg2)';
+    preview.appendChild(img);
+    const note=document.createElement('div');
+    note.style.cssText='font-size:12px;color:var(--text2);margin-bottom:10px';
+    note.textContent='기기 안에서 '+scan.readCount+'/45개 마킹을 읽었어요. 잘못 읽은 답은 눌러서 고친 뒤 제출해 주세요.';
+    preview.appendChild(note);
+    renderSExamFullGrid();
   }catch(e){
-    notify('AI 읽기 실패, 직접 체크해주세요: '+e.message,'error');
-    sExamFullAnswers={};
+    URL.revokeObjectURL(previewUrl);
+    sOmrCurrentPhoto=null;
+    document.getElementById('s-exam-full-loading').style.display='none';
+    document.getElementById('s-exam-full-choice').style.display='block';
+    alert('사진을 읽지 못했어요: '+e.message);
   }
-  document.getElementById('s-exam-full-loading').style.display='none';
-  document.getElementById('s-exam-full-grid-wrap').style.display='block';
-  document.getElementById('s-omr-photo-preview').innerHTML=previewUrl?'<img src="'+previewUrl+'" style="width:100%;border-radius:8px;margin-bottom:6px;max-height:200px;object-fit:contain;background:var(--bg2)"><div style="font-size:12px;color:var(--text2);margin-bottom:10px">AI가 읽은 답이에요. 잘못 읽은 문항은 눌러서 고쳐주세요.</div>':'';
-  renderSExamFullGrid();
 }
 
 async function sExamRequestRegrade(examId,examName){
