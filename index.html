@@ -587,7 +587,7 @@ input,button{font-family:var(--font)}
         <!-- 시험 목록 / 등록 -->
         <div id="t-exam-main">
           <div class="card" style="margin-bottom:1rem">
-            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div>
+            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div><div style="padding:0 1.25rem 1rem"><button id="sept-mock-register" class="btn btn-sm" onclick="registerSeptMockExams()">2026년 9월 모의고사 채점 등록</button><div id="sept-mock-register-status" style="font-size:11px;color:var(--text2);margin-top:6px">21회 × 화작·언매 · 배점 미확인으로 정답 개수와 정답률 표시</div></div>
           </div>
           <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🏫</span> 클리닉</div><div class="section-divider-line"></div></div>
           <div class="card" style="margin-bottom:1rem">
@@ -1798,7 +1798,7 @@ async function renderAnswerKey(){
   const staticItems=SEPT_MOCK_KEYS.filter(function(e){
     return !kw||e.title.toLowerCase().includes(kw)||('9월 '+e.week+'주차').includes(kw)||'모의고사반'.includes(kw);
   });
-  const dbItems=(akExams||[]).filter(function(e){return !kw||(e.name||'').toLowerCase().includes(kw);});
+  const dbItems=(akExams||[]).filter(function(e){return !isSeptAccuracyExam(e)&&(!kw||(e.name||'').toLowerCase().includes(kw));});
   if(!staticItems.length&&!dbItems.length){
     listEl.innerHTML='<div class="card"><div style="padding:1.5rem;text-align:center;color:var(--text3);font-size:13px">검색 결과가 없어요</div></div>';
     return;
@@ -4933,6 +4933,50 @@ const EXAM_TYPES=['사실 확인','추론·함축','어휘·어법','표현 기�
 // exams: id, name, total_q, questions(json: num,type,domain,points,answer,text,explanation), next_exam, next_range, teacher_id, created_at, category('school'|'mock'), grade_cuts(json: [{grade,cut}])
 // exam_responses: id, exam_id, student_name, answers(json: 오답 문항 idx만 키로 존재), photo_urls(json), score, correct_count, total_q, points_earned, points_total, created_at
 
+// 9월 사설·기출 모의고사: 공식 문항별 배점표가 없어 정답률만 계산한다.
+function septMockName(item,track){return '2026년 9월 '+item.week+'주차 · 모의고사반 · '+item.title+' · '+track;}
+function isSeptAccuracyExam(exam){return !!(exam&&/^2026년 9월 [1-4]주차 · 모의고사반 · /.test(exam.name||''));}
+function examScoreLabel(exam,score){return score+(isSeptAccuracyExam(exam)?'% 정답률':'점');}
+function septMockRows(){
+  const rows=[];
+  SEPT_MOCK_KEYS.forEach(function(item){
+    [['화작',item.writing],['언매',item.media]].forEach(function(pair){
+      const answers=item.common+pair[1];
+      if(!/^[1-5]{45}$/.test(answers))throw new Error(item.title+' '+pair[0]+' 정답 45개를 확인해 주세요.');
+      rows.push({name:septMockName(item,pair[0]),total_q:45,
+        questions:Array.from(answers,function(answer,i){return {num:i+1,type:'객관식',domain:i<34?'공통':pair[0],points:1,answer:answer,text:'',explanation:''};}),
+        category:'mock',next_exam:'',next_range:'',grade_cuts:[],teacher_id:session.id});
+    });
+  });
+  return rows;
+}
+async function registerSeptMockExams(){
+  if(!session||session.role!=='teacher'){alert('강사 계정으로 로그인해 주세요.');return;}
+  const button=document.getElementById('sept-mock-register');
+  const status=document.getElementById('sept-mock-register-status');
+  button.disabled=true;status.textContent='기존 등록 여부를 확인하고 있어요…';
+  try{
+    const rows=septMockRows();
+    const {data:existing,error:readError}=await sb.from('exams').select('name').eq('category','mock');
+    if(readError)throw readError;
+    const names=new Set((existing||[]).map(function(e){return e.name;}));
+    const missing=rows.filter(function(e){return !names.has(e.name);});
+    if(!missing.length){status.textContent='42개 모두 등록되어 있어요. 중복 등록하지 않았어요.';await renderTExam();return;}
+    let count=0;
+    for(let i=0;i<missing.length;i+=7){
+      const batch=missing.slice(i,i+7);
+      status.textContent='9월 모의고사 등록 중… '+count+'/'+missing.length;
+      const {error}=await sb.from('exams').insert(batch);
+      if(error)throw error;
+      count+=batch.length;
+    }
+    status.textContent=count+'개 등록 완료 · 기존 '+(rows.length-count)+'개는 유지했어요.';
+    akExams=null;
+    await renderTExam();
+  }catch(e){status.textContent='등록 실패: '+e.message+' · 다시 누르면 저장된 항목은 건너뛰고 이어서 등록해요.';}
+  finally{button.disabled=false;}
+}
+
 // ── 교사: 시험 목록 렌더 ──
 async function renderTExam(){
   const {data,error}=await sb.from('exams').select('*').order('created_at',{ascending:false});
@@ -4958,7 +5002,7 @@ function renderTExamList(elId,list,emptyMsg){
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-size:14px;font-weight:500">${e.name}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${e.total_q}문항
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${e.total_q}문항${isSeptAccuracyExam(e)?' · 정답률 채점':''}
           ${e.clinic_school?` · ${e.clinic_school}`:''}${e.clinic_week?` · ${e.clinic_week}`:''}
           ${e.next_exam?` · 다음: ${e.next_exam}`:''}
         </div>
@@ -5452,6 +5496,7 @@ function renderTResRanking(){
         if(my&&String(my)===String(q.answer))correct++;
       });
     }
+    if(Number.isInteger(r.correct_count))correct=r.correct_count;
     var score=r.score!=null?r.score:Math.round(correct/total*100);
     return {name:r.student_name,score:score,correct:correct,total:total,wrongCnt:total-correct};
   }).sort(function(a,b){return b.score-a.score||a.wrongCnt-b.wrongCnt;});
@@ -5470,7 +5515,7 @@ function renderTResRanking(){
       '<div style="width:36px;height:36px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--accent);flex-shrink:0">'+r.name[0]+'</div>'+
       '<div style="flex:1"><div style="font-size:14px;font-weight:500">'+r.name+'</div>'+
       '<div style="font-size:11px;color:var(--text3)">정답 '+r.correct+'/'+r.total+'문 · 오답 '+r.wrongCnt+'문</div></div>'+
-      '<div style="font-size:18px;font-weight:700;color:'+(r.score>=80?'var(--green)':r.score>=60?'var(--amber)':'var(--red)')+'">'+r.score+'점</div>'+
+      '<div style="font-size:18px;font-weight:700;color:'+(r.score>=80?'var(--green)':r.score>=60?'var(--amber)':'var(--red)')+'">'+examScoreLabel(exam,r.score)+'</div>'+
       '</div>';
   }).join('');
 }
@@ -5490,7 +5535,7 @@ function tResExportRankingPDF(){
     '<p style="color:#666;font-size:13px;margin-bottom:16px">총 '+exam.total_q+'문항 · '+responses.length+'명 응시</p>'+
     '<table style="width:100%;border-collapse:collapse">'+
     '<tr style="background:#f0f0f0"><th style="padding:10px;text-align:left;border:1px solid #ddd">순위</th><th style="padding:10px;text-align:left;border:1px solid #ddd">이름</th><th style="padding:10px;text-align:center;border:1px solid #ddd">점수</th><th style="padding:10px;text-align:center;border:1px solid #ddd">정답</th><th style="padding:10px;text-align:center;border:1px solid #ddd">오답</th></tr>'+
-    ranked.map(function(r,i){return '<tr><td style="padding:8px 10px;border:1px solid #ddd;font-weight:600">'+(i+1)+'위</td><td style="padding:8px 10px;border:1px solid #ddd">'+r.name+'</td><td style="padding:8px 10px;border:1px solid #ddd;text-align:center;font-weight:600;color:'+(r.score>=80?'#2d6b4a':r.score>=60?'#b07d1a':'#c0392b')+'">'+r.score+'점</td><td style="padding:8px 10px;border:1px solid #ddd;text-align:center">'+r.correct+'</td><td style="padding:8px 10px;border:1px solid #ddd;text-align:center">'+r.wrongCnt+'</td></tr>';}).join('')+
+    ranked.map(function(r,i){return '<tr><td style="padding:8px 10px;border:1px solid #ddd;font-weight:600">'+(i+1)+'위</td><td style="padding:8px 10px;border:1px solid #ddd">'+r.name+'</td><td style="padding:8px 10px;border:1px solid #ddd;text-align:center;font-weight:600;color:'+(r.score>=80?'#2d6b4a':r.score>=60?'#b07d1a':'#c0392b')+'">'+examScoreLabel(exam,r.score)+'</td><td style="padding:8px 10px;border:1px solid #ddd;text-align:center">'+r.correct+'</td><td style="padding:8px 10px;border:1px solid #ddd;text-align:center">'+r.wrongCnt+'</td></tr>';}).join('')+
     '</table></div>';
   var w=window.open('','_blank');
   w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>순위표</title><style>@media print{button{display:none}}</style></head><body>'+html+'<br><button onclick="window.print()" style="padding:10px 24px;background:#1a1612;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer;margin:10px">🖨️ PDF로 저장</button></body></html>');
@@ -6016,7 +6061,7 @@ async function omrReadWithAI(){
     omrReadAnswers={};
     for(let i=0;i<total;i++){
       const v=answersObj[String(i+1)];
-      omrReadAnswers[i]=(v&&Number(v)>=1&&Number(v)<=9)?String(v):'';
+      omrReadAnswers[i]=(v&&Number(v)>=1&&Number(v)<=5)?String(v):'';
     }
     omrTryAutoIdentify(parsed.phone||'');
   }catch(e){
@@ -6093,7 +6138,7 @@ async function omrBatchStart(files){
       const answers={};
       for(let qi=0;qi<total;qi++){
         const v=answersObj[String(qi+1)];
-        answers[qi]=(v&&Number(v)>=1&&Number(v)<=9)?String(v):'';
+        answers[qi]=(v&&Number(v)>=1&&Number(v)<=5)?String(v):'';
       }
       result.answers=answers;
       const digits=(parsed.phone||'').replace(/\D/g,'');
@@ -6257,7 +6302,7 @@ async function omrConfirmScore(){
   const res=await sb.from('exam_responses').upsert(payload,{onConflict:'exam_id,student_name'});
   if(res.error){notify('채점 저장 실패: '+res.error.message,'error');return;}
   closeOmrModal();
-  notify(name+' 학생 채점 완료! ('+score+'점)','success');
+  notify(name+' 학생 채점 완료! ('+examScoreLabel(exam,score)+')','success');
   await viewTExamResults(exam.id,exam.name);
 }
 
@@ -6654,7 +6699,7 @@ function buildReportCardHTML(studentName,exam,response,allResponses,academyName)
   var analysisText=repAnalysisText(domainStats,my.pct);
 
   var noticeHTML=(exam.grade_cuts&&exam.grade_cuts.length)?
-    exam.grade_cuts.map(function(c){return '&nbsp;* '+c.grade+'등급 : '+c.cut+'점';}).join('<br>'):'등급컷 정보 없음';
+    exam.grade_cuts.map(function(c){return '&nbsp;* '+c.grade+'등급 : '+c.cut+'점';}).join('<br>'):(isSeptAccuracyExam(exam)?'문항별 배점 미확인 · 정답률만 표시합니다.':'등급컷 정보 없음');
   var gradeBadge=grade?('<div style="font-size:22px;font-weight:800;color:#c0392b;margin-top:6px">'+grade+'등급</div>'):'';
 
   var domainRows=domainLabels.map(function(d){
@@ -6706,7 +6751,7 @@ function buildReportCardHTML(studentName,exam,response,allResponses,academyName)
       '</div>'+
     '</div>'+
     '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;text-align:center">'+
-      '<tr style="background:#2d5fa6;color:#fff"><th style="padding:8px">내점수/만점</th><th style="padding:8px">전체 평균</th><th style="padding:8px">표준편차</th><th style="padding:8px">상위 30%</th><th style="padding:8px">최고점</th>'+(showRank?'<th style="padding:8px">전체 석차</th>':'')+'</tr>'+
+      '<tr style="background:#2d5fa6;color:#fff"><th style="padding:8px">'+(isSeptAccuracyExam(exam)?'맞힌 문항/전체':'내점수/만점')+'</th><th style="padding:8px">전체 평균</th><th style="padding:8px">표준편차</th><th style="padding:8px">상위 30%</th><th style="padding:8px">최고점</th>'+(showRank?'<th style="padding:8px">전체 석차</th>':'')+'</tr>'+
       '<tr><td style="padding:8px;font-weight:700;font-size:16px">'+my.earned+'/'+my.total+'</td><td style="padding:8px">'+stats.avg+'</td><td style="padding:8px">'+stats.stddev+'</td><td style="padding:8px">'+stats.top30+'</td><td style="padding:8px">'+stats.max+'</td>'+(showRank?'<td style="padding:8px;font-weight:700">'+myRank+' / '+stats.n+'</td>':'')+'</tr>'+
     '</table>'+
     (analysisText?'<div style="background:#eef6f1;border:1px solid #cfe8db;border-radius:8px;padding:12px 16px;margin-bottom:20px">'+
@@ -6850,7 +6895,7 @@ function renderSExamListCards(list,respMap,emptyLabel){
       '<div style="padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
         '<div>'+
           '<div style="font-size:14px;font-weight:600">'+e.name+'</div>'+
-          '<div style="font-size:12px;color:var(--text2);margin-top:2px">총 '+e.total_q+'문항'+(resp?' · 제출완료 '+resp.score+'점':'')+'</div>'+
+          '<div style="font-size:12px;color:var(--text2);margin-top:2px">총 '+e.total_q+'문항'+(resp?' · 제출완료 '+examScoreLabel(e,resp.score):'')+'</div>'+
         '</div>'+
         actionHtml+
       '</div>'+
@@ -7046,7 +7091,7 @@ async function sOmrReadWithAI(previewUrl){
     sExamFullAnswers={};
     for(let i=0;i<total;i++){
       const v=parsed[String(i+1)];
-      sExamFullAnswers[i]=(v&&Number(v)>=1&&Number(v)<=9)?String(v):'';
+      sExamFullAnswers[i]=(v&&Number(v)>=1&&Number(v)<=5)?String(v):'';
     }
   }catch(e){
     notify('AI 읽기 실패, 직접 체크해주세요: '+e.message,'error');
@@ -7249,7 +7294,7 @@ function renderSExamResultView(score,correct,wrong,total){
     '<div style="font-size:17px;font-weight:600">'+sExamData.name+'</div>'+
     '<div style="font-size:12px;color:var(--text2);margin-top:2px">'+(session.name||'')+'</div>';
   document.getElementById('s-res-stats').innerHTML=
-    '<div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:700;color:'+(score>=80?'var(--green)':score>=60?'var(--amber)':'var(--red)')+'">'+score+'점</div><div style="font-size:11px;color:var(--text3);margin-top:2px">점수</div></div>'+
+    '<div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:700;color:'+(score>=80?'var(--green)':score>=60?'var(--amber)':'var(--red)')+'">'+score+(isSeptAccuracyExam(sExamData)?'%':'점')+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+(isSeptAccuracyExam(sExamData)?'정답률 · 공식 점수 아님':'점수')+'</div></div>'+
     '<div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:700;color:var(--green)">'+correct+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">정답</div></div>'+
     '<div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:700;color:var(--red)">'+wrong.length+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">오답</div></div>'+
     '<div style="text-align:center;background:var(--bg2);border-radius:8px;padding:12px"><div style="font-size:24px;font-weight:700">'+total+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">총 문항</div></div>';
