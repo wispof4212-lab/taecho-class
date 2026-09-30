@@ -6172,11 +6172,12 @@ async function omrAutoGradeFile(file){
     try{
       const handwriting=await readOmrFingerprint(scan.fingerprintImage);
       const phrases=rankOmrFingerprints(handwriting);
+      console.log('OMR fingerprint preview',handwriting,phrases.slice(0,3));
       const match=phrases[0],runnerUp=phrases[1];
       if(match&&match.score>=13&&match.score-(runnerUp?runnerUp.score:0)>=2.5){
         const item=SEPT_MOCK_KEYS.find(function(x){return x.id===match.id;});
         if(item){
-          const sameExam=ranked.filter(function(x){return baseName(x.exam.name)===item.title;});
+          const sameExam=ranked.filter(function(x){return baseName(x.exam.name).endsWith(' · '+item.title);});
           const wanted=scan.track?sameExam.find(function(x){return x.exam.name.endsWith(' · '+scan.track);}):null;
           const trackBest=wanted||sameExam[0];
           const trackSecond=sameExam.find(function(x){return x!==trackBest;});
