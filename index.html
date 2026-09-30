@@ -1317,7 +1317,7 @@ input,button{font-family:var(--font)}
       <div id="omr-step-review" style="display:none">
         <div id="omr-auto-exam-wrap" class="form-group" style="display:none;margin-bottom:10px"><label>시험 자동 판별 결과</label><select id="omr-auto-exam-select" class="form-select" onchange="omrAutoSelectExam(this.value)"></select><div id="omr-auto-exam-note" style="font-size:11px;color:var(--text2);margin-top:4px"></div></div>
         <img id="omr-review-img" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:200px;object-fit:contain;background:var(--bg2)">
-        <div class="form-group" style="margin-bottom:10px"><label>학생 (핸드폰 번호 마킹으로 자동 인식돼요)</label><select id="omr-student-select-review" class="form-select" onchange="document.getElementById('omr-student-select').value=this.value"></select></div>
+        <div class="form-group" style="margin-bottom:10px"><label>학생 선택</label><select id="omr-student-select-review" class="form-select" onchange="document.getElementById('omr-student-select').value=this.value"></select></div>
         <div id="omr-review-hint" style="font-size:12px;color:var(--text2);margin-bottom:10px">AI가 읽은 답이에요. 틀리게 읽은 문항은 숫자를 직접 고쳐주세요 (초록: 정답 일치, 빨강: 오답, 회색: 미마킹).</div>
         <div id="omr-review-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px;max-height:260px;overflow-y:auto;padding:2px"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
