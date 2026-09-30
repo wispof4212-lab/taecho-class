@@ -285,7 +285,7 @@ input,button{font-family:var(--font)}
 .s-home-grid button{min-height:75px;text-align:left;border:1px solid var(--border);border-radius:13px;background:#fff;padding:14px 16px;color:var(--text);cursor:pointer;font-family:inherit}
 .s-home-grid strong{display:block;font-size:15px}.s-home-grid small{display:block;font-size:11px;color:var(--text2);margin-top:5px}
 @media(max-width:700px){#page-student .main-inner{padding:1rem 1rem 1.5rem}#s-tabbar{display:none!important}#page-student .student-mobile-top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border)}#page-student .student-mobile-top button{border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 11px;font:inherit;font-size:12px;color:var(--text)}.s-home-head{padding:13px 15px}.s-home-character{width:62px;height:62px}.s-home-head h1{font-size:17px}.s-home-lecture{min-height:93px;padding:15px 17px}}
-</style>
+.s-home-section{border:1px solid var(--border);border-radius:15px;background:#fff;padding:14px 15px}.s-home-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.s-home-section-head h2{font-size:20px;margin:0;color:var(--text)}.s-home-section-head button{border:0;background:none;color:#987024;font:inherit;font-size:12px;cursor:pointer}.s-home-section .lecture-item{margin:0;border-radius:0;border-left:0;border-right:0}.s-home-section .lecture-item:last-child{border-bottom:0}@media(max-width:700px){.s-home-section{padding:11px 12px}.s-home-section-head h2{font-size:18px}}</style>
 </head>
 <body>
 <div id="loading-screen"><div class="spinner"></div><div class="loading-text">서버에 연결 중...</div></div>
@@ -599,7 +599,7 @@ input,button{font-family:var(--font)}
         <!-- 시험 목록 / 등록 -->
         <div id="t-exam-main">
           <div class="card" style="margin-bottom:1rem">
-            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div><div style="padding:0 1.25rem 1rem"><button id="sept-mock-register" class="btn btn-sm" onclick="registerSeptMockExams()">2026년 9월 모의고사 채점 등록</button><div id="sept-mock-register-status" style="font-size:11px;color:var(--text2);margin-top:6px">21회 × 화작·언매 · 배점 미확인으로 정답 개수와 정답률 표시</div></div>
+            <div class="card-head"><h3>새 시험 등록</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openOmrSheetModal()">🖨️ OMR 답안지 생성</button><button class="btn blue btn-sm" onclick="openTExamCreate()">+ 등록</button></div></div><div style="padding:0 1.25rem 1rem"><button id="sept-mock-register" class="btn btn-sm" onclick="registerSeptMockExams()">2026년 9월 모의고사 채점 등록</button><label class="btn blue btn-sm" style="display:inline-block;cursor:pointer;margin-left:6px">📷 사진만 올려 시험 판별·채점<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="omrAutoGradeFile(this.files[0]);this.value=''"></label><div id="sept-mock-register-status" style="font-size:11px;color:var(--text2);margin-top:6px">21회 × 화작·언매 · 배점 미확인으로 정답 개수와 정답률 표시</div></div>
           </div>
           <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label"><span>🏫</span> 클리닉</div><div class="section-divider-line"></div></div>
           <div class="card" style="margin-bottom:1rem">
@@ -910,7 +910,7 @@ input,button{font-family:var(--font)}
     <div class="main"><div class="student-mobile-top"><button type="button" onclick="sNav('home')">⌂ 홈</button><span>태초 국어</span></div><div class="main-inner">
       <div class="panel active" id="panel-home">
         <div class="s-home-head"><div><small>태초 국어</small><h1><span id="home-greet-name">학생</span>님, 오늘도 함께 공부해요.</h1></div><img class="s-home-character" src="teacher-home.webp" alt="태초 국어 선생님 캐릭터"></div>
-        <button class="s-home-lecture" type="button" onclick="sNav('lectures')"><span><strong>내 강의</strong><small>지금 볼 수 있는 수업 바로가기</small></span><span class="arrow" aria-hidden="true">→</span></button>
+        <div class="s-home-section"><div class="s-home-section-head"><h2>내 강의</h2><button type="button" onclick="sNav('lectures')">전체 강의 보기 →</button></div><div id="home-lecture-list"></div></div>
         <div class="s-home-grid">
           <button type="button" onclick="sNav('answerkey')"><strong>모의고사 답지</strong><small>최신 주차 정답 보기</small></button>
           <button type="button" onclick="sNav('exam')"><strong>온라인 채점</strong><small>OMR 채점과 결과</small></button>
@@ -1309,6 +1309,7 @@ input,button{font-family:var(--font)}
         <div id="omr-loading-msg" style="font-size:13px;color:var(--text2)">AI가 답안지를 읽는 중...</div>
       </div>
       <div id="omr-step-review" style="display:none">
+        <div id="omr-auto-exam-wrap" class="form-group" style="display:none;margin-bottom:10px"><label>시험 자동 판별 결과</label><select id="omr-auto-exam-select" class="form-select" onchange="omrAutoSelectExam(this.value)"></select><div id="omr-auto-exam-note" style="font-size:11px;color:var(--text2);margin-top:4px"></div></div>
         <img id="omr-review-img" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:200px;object-fit:contain;background:var(--bg2)">
         <div class="form-group" style="margin-bottom:10px"><label>학생 (핸드폰 번호 마킹으로 자동 인식돼요)</label><select id="omr-student-select-review" class="form-select" onchange="document.getElementById('omr-student-select').value=this.value"></select></div>
         <div id="omr-review-hint" style="font-size:12px;color:var(--text2);margin-bottom:10px">AI가 읽은 답이에요. 틀리게 읽은 문항은 숫자를 직접 고쳐주세요 (초록: 정답 일치, 빨강: 오답, 회색: 미마킹).</div>
@@ -1762,6 +1763,16 @@ function launchStudent(){
 function renderSHome(){
   var greet=document.getElementById('home-greet-name');
   if(greet)greet.textContent=(session&&session.name)||'학생';
+  var el=document.getElementById('home-lecture-list');
+  if(!el||!session)return;
+  var myClass=session.school_id||null;
+  var videos=normalVideos().filter(function(v){return !v.school_id||v.school_id===myClass;});
+  videos.sort(function(a,b){
+    var ap=getPct(session.id,a.id),bp=getPct(session.id,b.id);
+    var ar=ap>0&&ap<100?0:ap===0?1:2,br=bp>0&&bp<100?0:bp===0?1:2;
+    return ar-br||bp-ap;
+  });
+  el.innerHTML=videos.length?videos.slice(0,4).map(lectureCardHtml).join(''):'<div class="empty" style="padding:18px">지금 볼 수 있는 강의가 없어요.</div>';
 }
 
 const SEPT_MOCK_KEYS=[{"id":"sep26-01","week":1,"title":"2024 수능 (2023년 11월)","common":"5315322315231445421352133251412234","writing":"45445133251","media":"44134215335"},{"id":"sep26-02","week":1,"title":"이감 온 제8차","common":"5241224531342134531514124234554532","writing":"34452132415","media":"45315152544"},{"id":"sep26-03","week":1,"title":"2027학년도 9월 평가원","common":"4145421312531234545421123311323554","writing":"45543212325","media":"32234142525"},{"id":"sep26-04","week":1,"title":"상상 파이널 1-3","common":"4533345413432224315323245413524323","writing":"24514153324","media":"54354243312"},{"id":"sep26-05","week":1,"title":"한수 파이널 1-2","common":"3452243232515314533451341344142342","writing":"52342541354","media":"53324153334"},{"id":"sep26-06","week":1,"title":"강대K 5회","common":"4215155325414354431532524432234213","writing":"24345213415","media":"43145213254"},{"id":"sep26-07","week":2,"title":"2025학년도 6월 평가원","common":"5221521413345411243341252523435433","writing":"34515452432","media":"45113224255"},{"id":"sep26-08","week":2,"title":"강대K 7회","common":"2245211551533343145234124432135252","writing":"54213142235","media":"45434312513"},{"id":"sep26-09","week":2,"title":"바탕 7회","common":"3154453214432335553343343244125334","writing":"45121243454","media":"15242454354"},{"id":"sep26-10","week":2,"title":"이감 시즌 5-6","common":"1341223545231415513223541553425234","writing":"12443552254","media":"45412341553"},{"id":"sep26-11","week":2,"title":"이감 시즌 6-1","common":"2454135551133424233421544321552451","writing":"42542541513","media":"43552214334"},{"id":"sep26-12","week":3,"title":"2025학년도 9월 평가원","common":"4524431452313515113553144534352133","writing":"52152543244","media":"43415132442"},{"id":"sep26-13","week":3,"title":"상상 파이널 2-2","common":"1251235223521445531432145123252322","writing":"21423415551","media":"25413213454"},{"id":"sep26-14","week":3,"title":"한수 파이널 1-3","common":"3441424333142233123231531425324335","writing":"54241224454","media":"31453124214"},{"id":"sep26-15","week":3,"title":"강대K 8회","common":"3235334235344451533454412541355212","writing":"41313255324","media":"53134425324"},{"id":"sep26-16","week":3,"title":"바탕 5회","common":"3345414523214354433345325133435245","writing":"22155323455","media":"25331455423"},{"id":"sep26-17","week":4,"title":"2025 수능 (2024년 11월)","common":"3454532123153122324144522114354352","writing":"24345431152","media":"54312435213"},{"id":"sep26-18","week":4,"title":"이감 시즌 6-2","common":"4223253413115551452531243424151314","writing":"11422355523","media":"52351134243"},{"id":"sep26-19","week":4,"title":"이감 시즌 6-3","common":"5234534122433155114452543123151253","writing":"12242513531","media":"22151133345"},{"id":"sep26-20","week":4,"title":"한수 파이널 2-9","common":"3541542231351232454445142532453534","writing":"12144555122","media":"45432321552"},{"id":"sep26-21","week":4,"title":"강대K 9회","common":"4332131423154351553522411524522314","writing":"11432325154","media":"21345414523"}];
@@ -5988,6 +5999,7 @@ function generateOmrSheet(){
    ════════════════════════════════════════════ */
 var omrCamStream=null,omrCurrentPhoto=null,omrReadAnswers={};
 var omrBatchResults=[];
+var omrAutoMode=false,omrAutoExamConfirmed=false,omrAutoCandidates=[],omrAutoNoPhoto=false;
 async function openOmrModalForExam(examId){
   if(!tResCurrentExam||tResCurrentExam.id!==examId){
     const{data,error}=await sb.from('exams').select('*').eq('id',examId).single();
@@ -6016,6 +6028,8 @@ function closeOmrModal(){
   document.getElementById('modal-omr').classList.remove('show');
   omrCurrentPhoto=null;omrReadAnswers={};
   omrBatchResults=[];
+  omrAutoMode=false;omrAutoExamConfirmed=false;omrAutoCandidates=[];omrAutoNoPhoto=false;
+  const autoWrap=document.getElementById('omr-auto-exam-wrap');if(autoWrap)autoWrap.style.display='none';
 }
 function omrManualEntry(){
   const name=document.getElementById('omr-student-select').value;
@@ -6106,6 +6120,78 @@ async function omrReadWithAI(){
     for(let i=0;i<total;i++)omrReadAnswers[i]='';
   }
   renderOmrReview();
+}
+
+
+/* 사진 한 장에서 답안을 읽고 등록된 시험의 정답 패턴으로 회차·선택과목을 찾는다. */
+async function omrAutoGradeFile(file){
+  if(!file)return;
+  if(!session||session.role!=='teacher'){alert('강사 계정으로 로그인해 주세요.');return;}
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)){alert('JPG·PNG·WebP 사진을 선택해 주세요.');return;}
+  const key=getSharedClaudeKey();
+  if(!key){alert('사진 판독용 Claude API 키가 설정되지 않았어요.');return;}
+  const {data:allExams,error}=await sb.from('exams').select('*').eq('category','mock');
+  if(error||!allExams){alert('등록된 시험을 불러오지 못했어요.');return;}
+  const eligible=allExams.filter(function(e){
+    return e.total_q===45&&Array.isArray(e.questions)&&e.questions.length===45&&e.questions.every(function(q){return /^[1-5]$/.test(String(q.answer||''));});
+  });
+  if(!eligible.length){alert('정답이 등록된 45문항 모의고사가 없어요.');return;}
+  tResCurrentExam=eligible[0];
+  openOmrModal();
+  document.getElementById('omr-step-student').style.display='none';
+  document.getElementById('omr-step-loading').style.display='';
+  document.getElementById('omr-loading-msg').textContent='사진의 45개 마킹과 시험 회차를 판별하는 중...';
+  try{
+    const b64=await omrBlobToBase64(file);
+    const prompt='이 국어 OMR 답안지 사진을 판독하세요. 사진이 옆으로 돌아가 있어도 읽으세요. 공통 1~34번과 선택과목 35~45번의 각 마킹은 1~5 중 하나입니다. 비어 있거나 중복·불명확하면 0으로 적으세요. 학생 이름(name), 수험번호 또는 전화번호 숫자(phone), 손글씨 필적확인 문구(handwriting)도 읽되 불명확하면 빈 문자열로 두세요. 다른 설명 없이 순수 JSON만 반환하세요. 형식: {"answers":{"1":1,"2":2,"45":5},"name":"","phone":"","handwriting":""}';
+    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-5',max_tokens:2200,thinking:{type:'disabled'},messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:prompt}]}]})});
+    const data=await response.json();
+    if(!response.ok||data.error)throw new Error((data.error&&data.error.message)||'AI 사진 판독 실패');
+    const raw=(data.content||[]).map(function(c){return c.text||'';}).join('');
+    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const read={};let readCount=0;
+    for(let i=1;i<=45;i++){
+      const value=Number((parsed.answers||{})[String(i)]);
+      read[i-1]=Number.isInteger(value)&&value>=1&&value<=5?String(value):'';
+      if(read[i-1])readCount++;
+    }
+    if(readCount<20)throw new Error('마킹을 20개 미만으로 읽었어요. OMR 전체가 선명하게 나오도록 다시 촬영해 주세요.');
+    const ranked=eligible.map(function(exam){
+      const hits=exam.questions.reduce(function(n,q,i){return n+(read[i]&&read[i]===String(q.answer)?1:0);},0);
+      return {exam:exam,hits:hits};
+    }).sort(function(a,b){return b.hits-a.hits;});
+    const best=ranked[0];
+    const baseName=function(name){return String(name||'').replace(/ · (화작|언매)$/,'');};
+    const secondExam=ranked.find(function(x){return baseName(x.exam.name)!==baseName(best.exam.name);});
+    const otherTrack=ranked.find(function(x){return baseName(x.exam.name)===baseName(best.exam.name)&&x.exam.id!==best.exam.id;});
+    const examMargin=best.hits-(secondExam?secondExam.hits:0);
+    const trackMargin=best.hits-(otherTrack?otherTrack.hits:0);
+    const certain=readCount>=40&&best.hits>=22&&examMargin>=5&&trackMargin>=2;
+    tResCurrentExam=best.exam;
+    omrAutoMode=true;omrAutoExamConfirmed=certain;omrAutoNoPhoto=true;
+    omrCurrentPhoto=file;omrReadAnswers=read;omrAutoCandidates=ranked;
+    document.getElementById('omr-review-img').src=URL.createObjectURL(file);
+    const select=document.getElementById('omr-auto-exam-select');
+    select.replaceChildren();
+    if(!certain)select.add(new Option('시험을 직접 선택해 주세요',''));
+    ranked.forEach(function(x){select.add(new Option(x.exam.name+' · 일치 '+x.hits+'/45',String(x.exam.id)));});
+    select.value=certain?String(best.exam.id):'';
+    document.getElementById('omr-auto-exam-wrap').style.display='';
+    document.getElementById('omr-auto-exam-note').textContent=(certain?'정답 패턴으로 판별했어요.':'시험 판별이 불확실해요. 직접 확인해 주세요.')+' 읽은 마킹 '+readCount+'/45 · 필적 문구: '+(parsed.handwriting||'미인식');
+    const name=String(parsed.name||'').replace(/\s/g,'');
+    const student=activeStudents().find(function(x){return String(x.name||'').replace(/\s/g,'')===name;});
+    if(student)document.getElementById('omr-student-select').value=student.name;
+    else omrTryAutoIdentify(parsed.phone||'');
+    renderOmrReview();
+    document.getElementById('omr-review-hint').textContent='사진 판독 결과: '+best.hits+'/45 정답 일치. 시험·학생·마킹을 확인한 뒤 채점 확정을 눌러 주세요.';
+  }catch(e){closeOmrModal();alert('사진만으로 채점하지 못했어요: '+e.message);}
+}
+function omrAutoSelectExam(id){
+  const row=omrAutoCandidates.find(function(x){return String(x.exam.id)===String(id);});
+  if(!row){omrAutoExamConfirmed=false;return;}
+  tResCurrentExam=row.exam;omrAutoExamConfirmed=true;
+  renderOmrReview();
+  document.getElementById('omr-review-hint').textContent='선택한 시험과 '+row.hits+'/45개 일치. 학생과 마킹을 확인하고 채점 확정을 눌러 주세요.';
 }
 
 /* ── OMR 여러 장 한번에 업로드 (스캔파일) — 핸드폰 번호 마킹으로 학생 자동 인식 ── */
@@ -6302,6 +6388,7 @@ async function omrConfirmScore(){
   const name=document.getElementById('omr-student-select').value;
   if(!exam)return;
   if(!name){alert('학생이 자동 인식되지 않았어요. 위 목록에서 직접 선택해주세요.');return;}
+  if(omrAutoMode&&!omrAutoExamConfirmed){alert('시험 판별이 불확실해요. 위에서 시험을 직접 선택해 주세요.');return;}
   const total=exam.total_q;
   const wrongIdxs=[];
   for(let i=0;i<total;i++){
@@ -6318,7 +6405,7 @@ async function omrConfirmScore(){
 
   let photoUrl=null;
   try{
-    if(omrCurrentPhoto){
+    if(omrCurrentPhoto&&!omrAutoNoPhoto){
       const path='omr-photos/'+exam.id+'/'+name+'_'+Date.now()+'.jpg';
       const up=await sb.storage.from('exam-photos').upload(path,omrCurrentPhoto,{upsert:true,contentType:'image/jpeg'});
       if(!up.error){
