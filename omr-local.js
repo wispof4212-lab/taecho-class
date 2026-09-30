@@ -16,13 +16,27 @@ async function scanOmrLocally(file){
       else if(angle===270){ctx.translate(0,oh);ctx.rotate(-Math.PI/2);}
       ctx.drawImage(image,0,0);
       const scan=scanOmrPixels(ctx.getImageData(0,0,width,height));
-      if(scan && (!best || scan.readCount>best.readCount))best=Object.assign({angle:angle},scan);
+      if(scan && (!best || scan.readCount>best.readCount)){
+        best=Object.assign({angle:angle,fingerprintImage:cropOmrFingerprint(canvas,scan.layout)},scan);
+      }
       if(best&&best.readCount>=43)break;
     }
     if(!best)throw new Error('이 OMR 양식의 45문항 마킹 칸을 찾지 못했어요. 종이 전체가 선명하게 보이도록 찍어 주세요.');
     if(best.readCount<35)throw new Error('마킹을 '+best.readCount+'/45개만 판독했어요. 밝은 곳에서 종이를 평평하게 놓고 다시 찍어 주세요.');
     return best;
   }finally{if(image.close)image.close();}
+}
+
+function cropOmrFingerprint(canvas,layout){
+  // Anchor to the first printed answer row so modest photo framing changes do not move the crop.
+  const sx=layout.laneStep/37.25,sy=layout.rowStep/59.95;
+  const x=Math.max(0,layout.anchorX-678*sx),y=Math.max(0,layout.anchorY+136*sy);
+  const w=Math.min(canvas.width-x,450*sx),h=Math.min(canvas.height-y,121*sy);
+  if(w<200||h<60)return null;
+  const crop=document.createElement('canvas');crop.width=1800;crop.height=484;
+  const ctx=crop.getContext('2d');ctx.imageSmoothingQuality='high';
+  ctx.drawImage(canvas,x,y,w,h,0,0,crop.width,crop.height);
+  return crop.toDataURL('image/png');
 }
 
 function scanOmrPixels(imageData){
@@ -95,5 +109,26 @@ function scanOmrPixels(imageData){
       question++;
     }
   }
-  return {answers:answers,readCount:readCount,uncertain:uncertain};
+  const firstLanes=five[0];
+  const laneStep=(firstLanes[4].center-firstLanes[0].center)/4;
+  const rowStep=(allRows[0][allRows[0].length-1].center-allRows[0][0].center)/(allRows[0].length-1);
+  const anchorX=firstLanes[0].center,anchorY=allRows[0][0].center;
+  function darkAt(cx,cy){
+    let dark=0,total=0;
+    for(let y=Math.max(0,Math.round(cy-12));y<=Math.min(h-1,Math.round(cy+12));y++)
+      for(let x=Math.max(0,Math.round(cx-12));x<=Math.min(w-1,Math.round(cx+12));x++){
+        const i=(y*w+x)*4;
+        if((p[i]+p[i+1]+p[i+2])/3<105)dark++;
+        total++;
+      }
+    return total?dark/total:0;
+  }
+  const trackX=anchorX-298*(laneStep/37.25);
+  const writingScore=darkAt(trackX,anchorY+690*(rowStep/59.95));
+  const mediaScore=darkAt(trackX,anchorY+752*(rowStep/59.95));
+  const track=writingScore>=0.2&&writingScore-mediaScore>=0.12?'화작':
+    mediaScore>=0.2&&mediaScore-writingScore>=0.12?'언매':null;
+  return {answers:answers,readCount:readCount,uncertain:uncertain,
+    track:track,trackScores:[writingScore,mediaScore],
+    layout:{anchorX:anchorX,anchorY:anchorY,laneStep:laneStep,rowStep:rowStep}};
 }

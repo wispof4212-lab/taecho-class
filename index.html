@@ -1568,6 +1568,7 @@ input,button{font-family:var(--font)}
 <div class="notif" id="notif"></div>
 
 <script src="omr-local.js"></script>
+<script src="omr-fingerprint.js"></script>
 <script>
 const SB_URL='https://jsdziawffwxcvrvnmmgy.supabase.co';
 const SB_KEY='sb_publishable_NWhdwW4s7rqJ-AcD3Xjs0A_f91vmNAj';
@@ -6136,7 +6137,7 @@ async function omrReadWithAI(){
 }
 
 
-/* 사진 한 장에서 답안을 읽고 등록된 시험의 정답 패턴으로 회차·선택과목을 찾는다. */
+/* 사진 한 장에서 마킹·선택과목·필적 확인 문구를 기기 안에서 읽는다. */
 async function omrAutoGradeFile(file){
   if(!file)return;
   if(!session||session.role!=='teacher'){alert('강사 계정으로 로그인해 주세요.');return;}
@@ -6151,7 +6152,7 @@ async function omrAutoGradeFile(file){
   openOmrModal();
   document.getElementById('omr-step-student').style.display='none';
   document.getElementById('omr-step-loading').style.display='';
-  document.getElementById('omr-loading-msg').textContent='사진의 45개 마킹과 시험 회차를 판별하는 중...';
+  document.getElementById('omr-loading-msg').textContent='사진의 마킹과 필적 확인 문구를 기기 안에서 읽는 중...';
   try{
     const scan=await scanOmrLocally(file);
     const read=scan.answers,readCount=scan.readCount;
@@ -6165,8 +6166,34 @@ async function omrAutoGradeFile(file){
     const otherTrack=ranked.find(function(x){return baseName(x.exam.name)===baseName(best.exam.name)&&x.exam.id!==best.exam.id;});
     const examMargin=best.hits-(secondExam?secondExam.hits:0);
     const trackMargin=best.hits-(otherTrack?otherTrack.hits:0);
-    const certain=readCount>=40&&best.hits>=22&&examMargin>=5&&trackMargin>=2;
-    tResCurrentExam=best.exam;
+    let chosen=best,source='정답 패턴';
+    let certain=readCount>=40&&best.hits>=22&&examMargin>=5&&trackMargin>=2;
+    let phraseNote='';
+    try{
+      const handwriting=await readOmrFingerprint(scan.fingerprintImage);
+      const phrases=rankOmrFingerprints(handwriting);
+      const match=phrases[0],runnerUp=phrases[1];
+      if(match&&match.score>=13&&match.score-(runnerUp?runnerUp.score:0)>=2.5){
+        const item=SEPT_MOCK_KEYS.find(function(x){return x.id===match.id;});
+        if(item){
+          const sameExam=ranked.filter(function(x){return baseName(x.exam.name)===item.title;});
+          const wanted=scan.track?sameExam.find(function(x){return x.exam.name.endsWith(' · '+scan.track);}):null;
+          const trackBest=wanted||sameExam[0];
+          const trackSecond=sameExam.find(function(x){return x!==trackBest;});
+          if(trackBest&&(scan.track||(trackSecond&&trackBest.hits-trackSecond.hits>=3))){
+            chosen=trackBest;certain=true;source='필적 확인 문구';
+            phraseNote=' · '+item.title+' · '+(scan.track||trackBest.exam.name.split(' · ').pop());
+          }else if(!sameExam.length){
+            certain=false;phraseNote=' · 필적 문구에 맞는 시험의 정답이 아직 등록되지 않았어요.';
+          }else{
+            certain=false;phraseNote=' · 선택과목 표시를 읽지 못했어요.';
+          }
+        }
+      }
+    }catch(ocrError){
+      phraseNote=' · 필적 판독: '+ocrError.message;
+    }
+    tResCurrentExam=chosen.exam;
     omrAutoMode=true;omrAutoExamConfirmed=certain;omrAutoNoPhoto=true;
     omrCurrentPhoto=file;omrReadAnswers=read;omrAutoCandidates=ranked;
     document.getElementById('omr-review-img').src=URL.createObjectURL(file);
@@ -6174,11 +6201,12 @@ async function omrAutoGradeFile(file){
     select.replaceChildren();
     if(!certain)select.add(new Option('시험을 직접 선택해 주세요',''));
     ranked.forEach(function(x){select.add(new Option(x.exam.name+' · 일치 '+x.hits+'/45',String(x.exam.id)));});
-    select.value=certain?String(best.exam.id):'';
+    select.value=certain?String(chosen.exam.id):'';
+    select.style.display=certain?'none':'';
     document.getElementById('omr-auto-exam-wrap').style.display='';
-    document.getElementById('omr-auto-exam-note').textContent=(certain?'정답 패턴으로 판별했어요.':'시험 판별이 불확실해요. 직접 확인해 주세요.')+' 읽은 마킹 '+readCount+'/45 · 학생은 직접 선택해 주세요. 사진은 외부로 보내지 않아요.';
+    document.getElementById('omr-auto-exam-note').textContent=(certain?source+'로 '+chosen.exam.name+'을 확인했어요.':'시험 판별이 불확실해요. 직접 확인해 주세요.')+phraseNote+' · 읽은 마킹 '+readCount+'/45 · 학생은 직접 선택해 주세요. 사진은 외부로 보내지 않아요.';
     renderOmrReview();
-    document.getElementById('omr-review-hint').textContent='사진 판독 결과: '+best.hits+'/45 정답 일치. 시험·학생·마킹을 확인한 뒤 채점 확정을 눌러 주세요.';
+    document.getElementById('omr-review-hint').textContent='사진 판독 결과: '+chosen.hits+'/45 정답 일치. 시험·학생·마킹을 확인한 뒤 채점 확정을 눌러 주세요.';
   }catch(e){closeOmrModal();alert('사진만으로 채점하지 못했어요: '+e.message);}
 }
 function omrAutoSelectExam(id){
