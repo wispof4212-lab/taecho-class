@@ -291,6 +291,13 @@ input,button{font-family:var(--font)}
 .s-home-grid button:nth-child(-n+2) strong{font-size:17px}
 .s-home-grid button:nth-child(-n+2) small{font-size:12px}
 @media(max-width:700px){.s-home-grid button:nth-child(-n+2){min-height:96px;padding:14px 15px}.s-home-grid button:nth-child(-n+2) strong{font-size:17px}.s-home-grid button:nth-child(-n+2) small{font-size:12px}}
+@media(max-width:700px){
+  #panel-home.panel.active{display:flex;flex-direction:column;min-height:calc(100dvh - 82px)}
+  #panel-home .s-home-grid{flex:1;grid-template-rows:repeat(2,minmax(140px,1fr))}
+  #panel-home .s-home-grid button{display:flex;flex-direction:column;justify-content:center;min-height:140px;padding:18px}
+  #panel-home .s-home-grid strong,#panel-home .s-home-grid button:nth-child(-n+2) strong{font-size:18px;line-height:1.3}
+  #panel-home .s-home-grid small,#panel-home .s-home-grid button:nth-child(-n+2) small{font-size:12px;line-height:1.4;margin-top:8px}
+}
 </style>
 </head>
 <body>
