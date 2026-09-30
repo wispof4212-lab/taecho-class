@@ -1701,15 +1701,7 @@ async function doLogin(){
     localStorage.setItem('ai_provider',provider);
     const inputKey=document.getElementById('login-apikey').value.trim();
     if(inputKey)localStorage.setItem(provider+'_api_key',inputKey);
-    // 로그인할 때마다 브라우저에 저장된 키를 공유 저장소(app_settings)와 동기화 — 예전에 저장해둔 키도 학생 화면에서 쓸 수 있게
-    const keyToSync=inputKey||localStorage.getItem(provider+'_api_key');
-    if(keyToSync){
-      const settingsPatch={id:'default',ai_provider:provider,updated_at:new Date().toISOString()};
-      settingsPatch[provider+'_api_key']=keyToSync;
-      sb.from('app_settings').upsert(settingsPatch,{onConflict:'id'}).then(function(res){
-        if(!res.error)sharedAISettings=Object.assign({},sharedAISettings,settingsPatch);
-      });
-    }
+    // API 키는 이 강사 브라우저에만 보관한다. 공유 DB로 복사하면 학생 계정에도 노출된다.
     CLAUDE_API_KEY=localStorage.getItem('claude_api_key')||CLAUDE_API_KEY;
     btn.disabled=true;btn.textContent='로그인 중...';
     try{
@@ -3848,11 +3840,11 @@ var CLAUDE_API_KEY=localStorage.getItem('claude_api_key')||'';
 function getAIProvider(){return localStorage.getItem('ai_provider')||(sharedAISettings&&sharedAISettings.ai_provider)||'claude';}
 function getAIKey(provider){
   provider=provider||getAIProvider();
-  return localStorage.getItem(provider+'_api_key')||(sharedAISettings&&sharedAISettings[provider+'_api_key'])||'';
+  return session&&session.role==='teacher'?localStorage.getItem(provider+'_api_key')||'':'';
 }
 function aiProviderLabel(provider){return provider==='openai'?'GPT':provider==='gemini'?'Gemini':'Claude';}
-// OMR 사진 판독은 항상 Claude 비전을 사용 (학생 화면에서도 동작하도록 공유 설정에서 키를 가져옴)
-function getSharedClaudeKey(){return localStorage.getItem('claude_api_key')||(sharedAISettings&&sharedAISettings.claude_api_key)||'';}
+// OMR 사진 판독용 키는 강사 브라우저에서만 읽는다.
+function getSharedClaudeKey(){return session&&session.role==='teacher'?localStorage.getItem('claude_api_key')||'':'';}
 
 async function callTextAI(prompt,maxTokens){
   const provider=getAIProvider();
@@ -4945,16 +4937,6 @@ async function tSaveVocabStart(){
         if(user){
           session=user;hideLoading();
           if(parsed.role==='teacher'){
-            // 저장된 세션으로 바로 복원되는 경우에도 로컬에 저장된 AI 키를 공유 저장소와 동기화
-            var provider=localStorage.getItem('ai_provider')||'claude';
-            var keyToSync=localStorage.getItem(provider+'_api_key');
-            if(keyToSync&&(!sharedAISettings||sharedAISettings[provider+'_api_key']!==keyToSync)){
-              var patch={id:'default',ai_provider:provider,updated_at:new Date().toISOString()};
-              patch[provider+'_api_key']=keyToSync;
-              sb.from('app_settings').upsert(patch,{onConflict:'id'}).then(function(res){
-                if(!res.error)sharedAISettings=Object.assign({},sharedAISettings,patch);
-              });
-            }
             launchTeacher();
           }else launchStudent();
           return;
