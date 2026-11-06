@@ -299,6 +299,7 @@ input,button{font-family:var(--font)}
   #panel-home .s-home-grid small,#panel-home .s-home-grid button:nth-child(-n+2) small{font-size:12px;line-height:1.4;margin-top:8px}
 }
 </style>
+<link rel="stylesheet" href="study-proof.css?v=20261106">
 </head>
 <body>
 <div id="loading-screen"><div class="spinner"></div><div class="loading-text">서버에 연결 중...</div></div>
@@ -3337,9 +3338,9 @@ async function loadCertData(){
     var w=await sb.from('cert_weeks').select('*').order('created_at');
     var it=await sb.from('cert_items').select('*').order('created_at');
     var s=await sb.from('cert_submissions').select('*').order('submitted_at',{ascending:false});
-    certDb.weeks=w.data||[];
-    certDb.items=it.data||[];
-    certDb.submissions=s.data||[];
+    certDb.weeks=(w.data||[]).filter(function(row){return !row.id.startsWith("dpc_");});
+    certDb.items=(it.data||[]).filter(function(row){return !row.id.startsWith("dpc_");});
+    certDb.submissions=(s.data||[]).filter(function(row){return !row.id.startsWith("dps_");});
     // targets: item_id -> [student_ids]
     certDb.targets={};
     certDb.items.forEach(function(item){
@@ -7839,5 +7840,6 @@ function installPWA(){
   }
 }
 </script>
+<script src="study-proof.js?v=20261106"></script>
 </body>
 </html>
