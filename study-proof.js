@@ -43,6 +43,7 @@
     catch (_) { return validPhotoUrl(record.photo_url) ? [record.photo_url] : []; }
   }
   function validPhotoUrl(value) {
+    if (typeof value === 'string' && value.length <= 720000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) return true;
     try { var url = new URL(value); return url.origin === SB_URL && url.pathname.startsWith('/storage/v1/object/public/qa-files/daily-proof/'); }
     catch (_) { return false; }
   }
@@ -232,15 +233,10 @@
     try {
       message('사진을 저장하고 있어요.');
       if (!pendingUpload || pendingUpload.file !== file || pendingUpload.id !== id) {
-        pendingUpload = { file: file, id: id, path: 'daily-proof/' + crypto.randomUUID() + '.' + (file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'), uploaded: false, submittedAt: new Date().toISOString() };
+        pendingUpload = { file: file, id: id, photo: await preparePhoto(file), submittedAt: new Date().toISOString() };
       }
       var attempt = pendingUpload;
-      if (!attempt.uploaded) {
-        var upload = await sb.storage.from('qa-files').upload(attempt.path, file, { upsert: false, contentType: file.type });
-        if (upload.error && String(upload.error.statusCode) !== '409') throw upload.error;
-        attempt.uploaded = true;
-      }
-      var url = sb.storage.from('qa-files').getPublicUrl(attempt.path).data.publicUrl;
+      var url = attempt.photo;
       var payload = { id: id, item_id: config.id, student_id: user.id, school_id: config.school_id, status: 'pending', photo_url: JSON.stringify([url]), submitted_at: attempt.submittedAt };
       var result = await sb.from('cert_submissions').upsert(payload, { onConflict: 'id' });
       if (result.error) throw result.error;
@@ -252,6 +248,29 @@
       await refresh(); message('오늘의 공부 인증을 올렸어요. 선생님이 확인할게요.');
     } catch (_) { message('저장 완료를 확인하지 못했어요. 같은 사진으로 다시 제출해 주세요.', true); }
     finally { busy = false; document.getElementById('dp-submit').disabled = false; }
+  }
+  async function preparePhoto(file) {
+    var url = URL.createObjectURL(file);
+    try {
+      var image = new Image();
+      image.src = url;
+      await image.decode();
+      var sizes = [1920, 1440, 1080];
+      var qualities = [0.85, 0.75, 0.65];
+      for (var i = 0; i < sizes.length; i++) {
+        var scale = Math.min(1, sizes[i] / Math.max(image.naturalWidth, image.naturalHeight));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        var context = canvas.getContext('2d');
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        var result = canvas.toDataURL('image/jpeg', qualities[i]);
+        if (result.length <= 700000) return result;
+      }
+      throw new Error('Photo is too large');
+    } finally { URL.revokeObjectURL(url); }
   }
   async function review(record, status) {
     if (!session || session.role !== 'teacher') return;

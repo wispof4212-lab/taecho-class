@@ -3337,7 +3337,7 @@ async function loadCertData(){
   try{
     var w=await sb.from('cert_weeks').select('*').order('created_at');
     var it=await sb.from('cert_items').select('*').order('created_at');
-    var s=await sb.from('cert_submissions').select('*').order('submitted_at',{ascending:false});
+    var s=await sb.from('cert_submissions').select('*').not('id','like','dps_%').order('submitted_at',{ascending:false});
     certDb.weeks=(w.data||[]).filter(function(row){return !row.id.startsWith("dpc_");});
     certDb.items=(it.data||[]).filter(function(row){return !row.id.startsWith("dpc_");});
     certDb.submissions=(s.data||[]).filter(function(row){return !row.id.startsWith("dps_");});
@@ -7840,6 +7840,6 @@ function installPWA(){
   }
 }
 </script>
-<script src="study-proof.js?v=20261106"></script>
+<script src="study-proof.js?v=20261106b"></script>
 </body>
 </html>
